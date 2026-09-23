@@ -2,6 +2,8 @@ name: Build Android APK (Redmi Note 13 - arm64-v8a)
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
   workflow_dispatch:
@@ -38,10 +40,15 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          cache-read-only: false
+          cache-disabled: 'true'
 
-      - name: Prepare local.properties
+      - name: Configure build properties and RAM
         run: |
+          # Aumentar memoria para R8 y Kotlin daemon en GitHub Actions
+          sed -i 's/org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx8g -XX:+UseG1GC -Dfile.encoding=UTF-8/' gradle.properties
+          sed -i 's/kotlin.daemon.jvmargs=.*/kotlin.daemon.jvmargs=-Xmx4g -XX:+UseG1GC/' gradle.properties
+          sed -i 's/org.gradle.workers.max=.*/org.gradle.workers.max=4/' gradle.properties
+          
           echo "jvm.toolchain.version=21" >> local.properties
           echo "kotlin.native.ignoreDisabledTargets=true" >> local.properties
           echo "ani.android.abis=arm64-v8a" >> local.properties
@@ -71,6 +78,8 @@ jobs:
             -Psigning_release_storePassword="animeko123" \
             -Psigning_release_keyAlias="animeko" \
             -Psigning_release_keyPassword="animeko123" \
+            "-Dorg.gradle.jvmargs=-Xmx8g -XX:+UseG1GC -Dfile.encoding=UTF-8" \
+            "-Dkotlin.daemon.jvm.options=-Xmx4g" \
             --stacktrace
 
       - name: Organize APKs for Redmi Note 13

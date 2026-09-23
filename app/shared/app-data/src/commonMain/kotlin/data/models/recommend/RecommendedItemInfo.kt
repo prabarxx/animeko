@@ -19,7 +19,10 @@ data class RecommendedSubjectInfo(
     val bangumiId: Int,
     val nameCn: String,
     val imageLarge: String,
-) : RecommendedItemInfo()
+    val name: String = "",
+) : RecommendedItemInfo() {
+    val displayName: String get() = name.ifBlank { nameCn }
+}
 
 
 val RecommendedItemInfo.id: Any

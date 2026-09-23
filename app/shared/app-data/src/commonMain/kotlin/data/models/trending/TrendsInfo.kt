@@ -22,4 +22,7 @@ data class TrendingSubjectInfo(
     val bangumiId: Int,
     val nameCn: String,
     val imageLarge: String,
-)
+    val name: String = "",
+) {
+    val displayName: String get() = name.ifBlank { nameCn }
+}

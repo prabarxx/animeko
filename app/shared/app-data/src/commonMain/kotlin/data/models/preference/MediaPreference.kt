@@ -36,7 +36,7 @@ constructor(
     /**
      * 若精确匹配失败, 则使用正则表达式匹配, 将会选择首个匹配
      */
-    val alliancePatterns: List<String>? = null,
+    val alliancePatterns: List<String>? = DefaultAlliancePatterns,
 
     val resolution: String? = null,
     val fallbackResolutions: List<String>? = listOf(
@@ -76,6 +76,12 @@ constructor(
 ) {
     @OptIn(SerializationOnly::class)
     companion object {
+        val DefaultAlliancePatterns: List<String> = listOf(
+            "(?i).*Erai[-_ ]?raws.*",
+            "(?i).*SubsPlease.*",
+            "(?i).*Judas.*",
+        )
+
         /**
          * With default values
          * @see Empty
@@ -86,6 +92,7 @@ constructor(
          * Prefer nothing
          */
         val Empty = MediaPreference(
+            alliancePatterns = emptyList(),
             mediaSourceId = null,
             fallbackSubtitleLanguageIds = null,
             fallbackResolutions = null,

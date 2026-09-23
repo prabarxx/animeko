@@ -63,7 +63,7 @@ fun SubjectRecommendationCard(
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    remember(item) { item.nameCn.takeIf { !it.isNullOrBlank() } ?: item.name },
+                    remember(item) { item.name.takeIf { !it.isNullOrBlank() } ?: (item.nameCn ?: "") },
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,

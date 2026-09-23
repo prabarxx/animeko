@@ -27,25 +27,40 @@ import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.logging.error
 import kotlin.coroutines.CoroutineContext
 
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
+import io.ktor.http.isSuccess
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import me.him188.ani.utils.ktor.createDefaultHttpClient
+
 class TrendsRepository(
     private val trendsApi: ApiInvoker<TrendsAniApi>,
+    private val httpClient: HttpClient = createDefaultHttpClient(),
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_
 ) : Repository() {
     suspend fun getTrendsInfo(): TrendsInfo {
         return withContext(ioDispatcher) {
-            trendsApi {
+            fetchBangumiNextTrends() ?: trendsApi {
                 getTrends().body().toTrendsInfo()
             }
         }
     }
 
-    // From animeko server
+    // From animeko server or bangumi
     fun trendsInfoPager(): Flow<PagingData<TrendsInfo>> {
         return Pager(defaultPagingConfig) {
             SinglePagePagingSource<Unit, TrendsInfo> {
                 runWrappingExceptionAsLoadResult<Unit, TrendsInfo> {
                     val trendsInfo = withContext(ioDispatcher) {
-                        trendsApi {
+                        fetchBangumiNextTrends() ?: trendsApi {
                             getTrends().body().toTrendsInfo()
                         }
                     }
@@ -61,6 +76,38 @@ class TrendsRepository(
                 }
             }
         }.flow
+    }
+
+    private suspend fun fetchBangumiNextTrends(): TrendsInfo? {
+        return try {
+            val response = httpClient.get("https://next.bgm.tv/p1/trending/subjects?type=2") {
+                header(HttpHeaders.UserAgent, "Animeko/6.2.1 (Linux; Android)")
+            }
+            if (!response.status.isSuccess()) return null
+            val text = response.bodyAsText()
+            val json = Json { ignoreUnknownKeys = true; isLenient = true }
+            val root = json.parseToJsonElement(text).jsonObject
+            val dataArray = root["data"]?.jsonArray ?: return null
+            val subjects = dataArray.mapNotNull { itemEl ->
+                val sub = itemEl.jsonObject["subject"]?.jsonObject ?: return@mapNotNull null
+                val id = sub["id"]?.jsonPrimitive?.intOrNull ?: return@mapNotNull null
+                val name = sub["name"]?.jsonPrimitive?.contentOrNull ?: ""
+                val nameCn = sub["nameCN"]?.jsonPrimitive?.contentOrNull ?: ""
+                val images = sub["images"]?.jsonObject
+                val img = images?.get("large")?.jsonPrimitive?.contentOrNull
+                    ?: images?.get("common")?.jsonPrimitive?.contentOrNull
+                    ?: "https://static.myani.org/subjects/$id/cover/thumb"
+                TrendingSubjectInfo(
+                    bangumiId = id,
+                    nameCn = nameCn,
+                    imageLarge = img,
+                    name = name,
+                )
+            }
+            if (subjects.isEmpty()) null else TrendsInfo(subjects)
+        } catch (e: Exception) {
+            null
+        }
     }
 }
 

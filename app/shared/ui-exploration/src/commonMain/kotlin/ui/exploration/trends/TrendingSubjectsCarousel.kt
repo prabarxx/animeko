@@ -70,7 +70,7 @@ fun TrendingSubjectsCarousel(
         val content: @Composable CarouselItemScope.(Int) -> Unit = { index ->
             val item = if (items.isLoadingFirstPageOrRefreshing) null else items[index]
             CarouselItem(
-                label = { CarouselItemDefaults.Text(item?.nameCn ?: "") },
+                label = { CarouselItemDefaults.Text(item?.displayName ?: "") },
                 Modifier.placeholder(item == null, shape = rememberMaskShape(CarouselItemDefaults.shape)),
             ) {
                 if (item != null) {
@@ -78,7 +78,7 @@ fun TrendingSubjectsCarousel(
                         AsyncImage(
                             item.imageLarge,
                             modifier = Modifier.height(size.imageHeight),
-                            contentDescription = item.nameCn,
+                            contentDescription = item.displayName,
                             contentScale = ContentScale.Crop,
                         )
                     }

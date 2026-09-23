@@ -72,8 +72,9 @@ class RecommendationRepository(
         val id = subjectId?.takeIf { it > 0 }?.toInt() ?: return null
         return RecommendedSubjectInfo(
             bangumiId = id,
-            nameCn = subjectNameCn.ifEmpty { subjectName },
+            nameCn = subjectNameCn,
             imageLarge = imageUrl,
+            name = subjectName,
         )
     }
 }

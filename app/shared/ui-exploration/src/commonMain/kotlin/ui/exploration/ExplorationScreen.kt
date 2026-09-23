@@ -282,7 +282,7 @@ fun ExplorationScreen(
                                     subjectId = it.bangumiId,
                                     placeholder = SubjectDetailPlaceholder(
                                         id = it.bangumiId,
-                                        name = it.nameCn,
+                                        name = it.displayName,
                                         coverUrl = it.imageLarge,
                                     ),
                                 )
@@ -376,7 +376,7 @@ fun ExplorationScreen(
 fun RecommendedSubjectInfo.toNavPlaceholder(): SubjectDetailPlaceholder {
     return SubjectDetailPlaceholder(
         id = bangumiId,
-        name = nameCn,
+        name = displayName,
         nameCN = nameCn,
         coverUrl = imageLarge,
     )

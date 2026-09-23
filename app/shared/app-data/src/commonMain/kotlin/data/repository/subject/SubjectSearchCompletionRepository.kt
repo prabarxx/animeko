@@ -74,7 +74,7 @@ class SubjectSearchCompletionRepository(
 
                     LoadResult.Page(
                         data = filteredSubjects
-                            .map { it.subjectInfo.nameCn.ifEmpty { it.subjectInfo.name } }
+                            .map { it.subjectInfo.displayName }
                             .filter { it.isNotBlank() }
                             .distinct(),
                         prevKey = null,

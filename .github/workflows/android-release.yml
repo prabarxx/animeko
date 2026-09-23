@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Nombre del tag o versión de release (ej. v6.1.0-es)'
+        description: 'Nombre del tag o versión de release (ej. v6.2.1-es)'
         required: false
-        default: 'v6.2.0-es'
+        default: 'v6.2.1-es'
 
 permissions:
   contents: write
@@ -88,7 +88,7 @@ jobs:
           mkdir -p output_apks
           APK_ARM64=$(find app/android/build/outputs/apk/default/release -name "*arm64-v8a-release.apk" | head -n 1)
           if [ -n "$APK_ARM64" ] && [ -f "$APK_ARM64" ]; then
-            cp "$APK_ARM64" output_apks/animeko-v6.2.0-redmi-note-13-arm64-v8a.apk
+            cp "$APK_ARM64" output_apks/animeko-v6.2.1-redmi-note-13-arm64-v8a.apk
             cp "$APK_ARM64" output_apks/animeko-redmi-note-13-arm64-v8a.apk
           fi
           
@@ -115,31 +115,30 @@ jobs:
           elif [ -n "${{ inputs.tag_name }}" ]; then
             echo "val=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
           else
-            echo "val=v6.2.0-es" >> "$GITHUB_OUTPUT"
+            echo "val=v6.2.1-es" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.val }}
-          name: Animeko v6.2.0 para Redmi Note 13 (${{ steps.tag.outputs.val }})
+          name: Animeko v6.2.1 para Redmi Note 13 (${{ steps.tag.outputs.val }})
           body: |
-            ## Animeko v6.2.0 (Redmi Note 13 / arm64-v8a)
+            ## Animeko v6.2.1 (Redmi Note 13 / arm64-v8a)
             
-            Versión actualizada con traducciones completas al español y fuentes optimizadas para Latinoamérica y España.
+            Versión con buscador corregido para Romaji/Occidental, inicio sin caracteres chinos y prioridad para Erai-raws con subtítulos en español.
             
             ### Archivos incluidos:
-            - **`animeko-v6.2.0-redmi-note-13-arm64-v8a.apk`**: APK optimizado nativo para Redmi Note 13 con versionado claro.
+            - **`animeko-v6.2.1-redmi-note-13-arm64-v8a.apk`**: APK optimizado nativo para Redmi Note 13 (arm64-v8a).
             - **`animeko-redmi-note-13-arm64-v8a.apk`**: Enlace estándar para compatibilidad.
             - **`animeko-universal-release.apk`**: APK universal.
             
-            ### Novedades de esta versión (v6.2.0):
+            ### Novedades y correcciones (v6.2.1):
+            - **Buscador 100% funcional**: Búsqueda integrada con fallback a Bangumi v0 Search API. Permite buscar animes escribiendo directamente en alfabeto latino/Romaji (*Jujutsu Kaisen*, *Kimetsu no Yaiba*, *Chainsaw Man*, *Solo Leveling*, etc.).
+            - **Inicio y tendencias en Romaji**: Carrusel de tendencias y recomendaciones de la pantalla de inicio ahora muestran los nombres originales / Romaji en lugar de caracteres chinos (*nameCn*).
+            - **Prioridad Erai-raws por defecto**: Selección automática prioritaria de torrents de `[Erai-raws]` (con subtítulos Multi-Sub / Español Latino). Si no está disponible, pasa automáticamente a otros grupos (*SubsPlease*, *Judas*, etc.) o cualquier fuente disponible.
             - **Traducción al español del 100% de la interfaz**: Todas las pantallas, configuraciones y botones traducidos.
-            - **Nombres latinos y en alfabeto estándar por defecto**: Los animes muestran títulos en Romaji/Occidental (*Jujutsu Kaisen*, *Kimetsu no Yaiba*) en vez de caracteres chinos.
-            - **Traducción automática de etiquetas de Bangumi**: Géneros (*Acción*, *Fantasía*, *Comedia*), demografías y temporadas (*Otoño 2024*).
             - **Fuentes sin bloqueo agregadas**: **Nyaa (Sub Español / Multi / Eng)** y **AnimeTosho** activadas por defecto.
-            - **Desconexión de trackers chinos**: Mikan y DMHY desactivados por defecto; Danmaku chino solo si hay credenciales.
-            - **Preferencia automática de subtítulos en español**: Prioridad para pistas Español Latino y Castellano.
           draft: false
           prerelease: false
           files: |

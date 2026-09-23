@@ -557,6 +557,7 @@ class DefaultMediaSelector(
         val selectedSubtitleLanguageId = mergedPreference.subtitleLanguageId
         val selectedResolution = mergedPreference.resolution
         val selectedAlliance = mergedPreference.alliance
+        val selectedMediaSource = mergedPreference.mediaSourceId
         val rawAlliancePatterns = mergedPreference.alliancePatterns ?: MediaPreference.DefaultAlliancePatterns
         val allianceRegexes = rawAlliancePatterns
             .filter { it.isNotBlank() }

@@ -64,7 +64,7 @@
 
     <string name="playback_history_sync_delete_all">Eliminar all elementos pendientes de sincronizar</string>
 
-    <string name="settings_category_app_ui">App &amp; UI</string>
+    <string name="settings_category_app_ui">Aplicación e Interfaz</string>
 
     <string name="settings_category_data_playback">Fuente de Datos &amp; Playback</string>
 
@@ -76,15 +76,15 @@
 
     <string name="settings_tab_appearance">Apariencia</string>
 
-    <string name="settings_tab_theme">Theme &amp; Colors</string>
+    <string name="settings_tab_theme">Tema y Colores</string>
 
-    <string name="settings_tab_player">Reproductor &amp; Danmaku Filtrar</string>
+    <string name="settings_tab_player">Reproductor</string>
 
     <string name="settings_tab_media_source">Administración de Fuentes</string>
 
-    <string name="settings_tab_media_selector">Preferencias de Visualización</string>
+    <string name="settings_tab_media_selector">Fuentes de Medios</string>
 
-    <string name="settings_tab_danmaku">Región del Servidor</string>
+    <string name="settings_tab_danmaku">Danmaku</string>
 
     <string name="settings_tab_proxy">Proxy</string>
 
@@ -94,13 +94,13 @@
 
     <string name="settings_pikpak_enabled">Habilitar PikPak</string>
 
-    <string name="settings_pikpak_username">Username</string>
+    <string name="settings_pikpak_username">Nombre de usuario</string>
 
-    <string name="settings_pikpak_username_placeholder">Email or phone</string>
+    <string name="settings_pikpak_username_placeholder">Correo o teléfono</string>
 
-    <string name="settings_pikpak_password">Password</string>
+    <string name="settings_pikpak_password">Contraseña</string>
 
-    <string name="settings_pikpak_password_description">Set a password in your PikPak account settings if you signed up via Google.</string>
+    <string name="settings_pikpak_password_description">Configura una contraseña en PikPak si te registraste con Google.</string>
 
     <string name="settings_pikpak_password_hidden">••••••••</string>
 
@@ -108,7 +108,7 @@
 
     <string name="settings_pikpak_queue_description">How many recent sources to keep in PikPak\'s working folder before evicting the oldest. Higher makes re-plays instant at the cost of drive space. Drag past 13 for no eviction at all.</string>
 
-    <string name="settings_pikpak_queue_unlimited">Unlimited</string>
+    <string name="settings_pikpak_queue_unlimited">Ilimitado</string>
 
     <string name="settings_pikpak_download_concurrency_title">Descargar concurrency</string>
 
@@ -122,9 +122,9 @@
 
     <string name="settings_pikpak_recommend_apply">Aplicar</string>
 
-    <string name="settings_pikpak_recommend_dismiss">Skip</string>
+    <string name="settings_pikpak_recommend_dismiss">Omitir</string>
 
-    <string name="settings_tab_cache">Caché Automática</string>
+    <string name="settings_tab_cache">Almacenamiento y Caché</string>
 
     <string name="settings_tab_storage">Almacenamiento</string>
 
@@ -160,13 +160,13 @@
 
     <string name="settings_debug_reset_onboarding">Restablecer guía de nuevo usuario</string>
 
-    <string name="settings_debug_reset_onboarding_description">After reset, the next time you start the app, it will go through the new user guide</string>
+    <string name="settings_debug_reset_onboarding_description">Después de reiniciar, al iniciar la app se mostrará la guía inicial</string>
 
     <string name="settings_debug_reset_onboarding_toast">Se ha restablecido la guía de nuevo usuario</string>
 
     <string name="settings_debug_others">Otros</string>
 
-    <string name="settings_debug_get_bangumi_token">Obtain Bangumi access token</string>
+    <string name="settings_debug_get_bangumi_token">Obtener token de acceso a Bangumi</string>
 
     <string name="settings_debug_get_ani_token">Obtain Ani access token</string>
 
@@ -599,7 +599,7 @@
 
     <string name="settings_storage_bt_cache_location">BT video cache location</string>
 
-    <string name="settings_storage_bt_cache_location_description">Changing this won\'t automatically migrate data nor delete old data.\nIf you want to remove old data, please click &quot;Open BT cache directory&quot; before making changes and remove all files in that directory.\n\nRestart required to take effect.</string>
+    <string name="settings_storage_bt_cache_location_description">Changing this won\'t automatically migrate data nor delete old data.\nIf you want to remove old data, please click "Open BT cache directory" before making changes and remove all files in that directory.\n\nRestart required to take effect.</string>
 
     <string name="settings_storage_choose_directory">Choose video save directory</string>
 
@@ -1848,7 +1848,7 @@
 
     <string name="settings_account_profile_crop_hint">Drag the selection to move it, or drag the corners to resize</string>
 
-    <string name="exploration_followed_collect_as_to_show_here">Follow an anime as &quot;%1$s&quot; and it will appear here</string>
+    <string name="exploration_followed_collect_as_to_show_here">Follow an anime as "%1$s" and it will appear here</string>
 
     <string name="subject_details_login_to_collect">Sign in to follow</string>
 
@@ -2230,29 +2230,29 @@
 
     <string name="exploration_search_staff_prefix">Personal: </string>
 
-    <string name="exploration_search_filter_audience">Audience</string>
+    <string name="exploration_search_filter_audience">Audiencia</string>
 
-    <string name="exploration_search_filter_category">Category</string>
+    <string name="exploration_search_filter_category">Categoría</string>
 
     <string name="exploration_search_filter_character">Personaje</string>
 
-    <string name="exploration_search_filter_emotion">Emotion</string>
+    <string name="exploration_search_filter_emotion">Emoción / Tono</string>
 
-    <string name="exploration_search_filter_genre">Genre</string>
+    <string name="exploration_search_filter_genre">Género</string>
 
-    <string name="exploration_search_filter_rating">Puntuación</string>
+    <string name="exploration_search_filter_rating">Clasificación</string>
 
-    <string name="exploration_search_filter_region">Region</string>
+    <string name="exploration_search_filter_region">Región</string>
 
-    <string name="exploration_search_filter_series">Series</string>
+    <string name="exploration_search_filter_series">Franquicia</string>
 
-    <string name="exploration_search_filter_setting">Setting</string>
+    <string name="exploration_search_filter_setting">Ambientación</string>
 
-    <string name="exploration_search_filter_source">Source</string>
+    <string name="exploration_search_filter_source">Origen</string>
 
-    <string name="exploration_search_filter_technology">Technology</string>
+    <string name="exploration_search_filter_technology">Formato</string>
 
-    <string name="exploration_search_filter_custom">Custom</string>
+    <string name="exploration_search_filter_custom">Personalizado</string>
 
     <string name="settings_app_background_running">Background running</string>
 

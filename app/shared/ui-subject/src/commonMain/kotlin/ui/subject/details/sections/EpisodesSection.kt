@@ -136,7 +136,7 @@ fun EpisodeGridCell(
                     )
                 }
                 Text(
-                    item.nameCn.ifBlank { item.name },
+                    item.name.ifBlank { item.nameCn },
                     color = nameColor,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1,

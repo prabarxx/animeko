@@ -21,6 +21,9 @@ import me.him188.ani.app.domain.mediasource.web.SelectorMediaSourceArguments
 import me.him188.ani.app.domain.mediasource.web.SelectorSearchConfig
 import me.him188.ani.app.domain.mediasource.web.format.SelectorChannelFormatNoChannel
 import me.him188.ani.app.domain.mediasource.web.format.SelectorSubjectFormatA
+import me.him188.ani.app.domain.mediasource.rss.RssMediaSource
+import me.him188.ani.app.domain.mediasource.rss.RssMediaSourceArguments
+import me.him188.ani.app.domain.mediasource.rss.RssSearchConfig
 import me.him188.ani.datasources.api.source.FactoryId
 import me.him188.ani.datasources.api.source.MediaSourceConfig
 import me.him188.ani.datasources.api.source.MediaSourceTier
@@ -79,9 +82,62 @@ data class MediaSourceSaves(
                 config = MediaSourceConfig.Default,
             )
 
-            val enabledBtSources: List<String> =
-                listOf(MikanCNMediaSource.ID, "dmhy")
-            val disabledBtSources: List<String> = listOf()
+            val enabledBtSources: List<String> = emptyList()
+            val disabledBtSources: List<String> = listOf(MikanCNMediaSource.ID, "dmhy")
+
+            fun createNyaaSave(): MediaSourceSave {
+                val args = RssMediaSourceArguments(
+                    name = "Nyaa (Sub Español / Multi / Eng)",
+                    description = "Torrents de anime con subtítulos en español, multi-idioma e inglés",
+                    iconUrl = "https://nyaa.si/static/favicon.png",
+                    searchConfig = RssSearchConfig(
+                        searchUrl = "https://nyaa.si/?page=rss&c=1_0&q={keyword}",
+                        filterByEpisodeSort = true,
+                        filterBySubjectName = false,
+                    ),
+                    tier = MediaSourceTier(0u),
+                )
+                val json = Json {
+                    encodeDefaults = true
+                    ignoreUnknownKeys = true
+                }
+                return MediaSourceSave(
+                    instanceId = Uuid.randomString(),
+                    mediaSourceId = "nyaa-anime",
+                    factoryId = RssMediaSource.FactoryId,
+                    isEnabled = true,
+                    config = MediaSourceConfig(
+                        serializedArguments = json.encodeToJsonElement(RssMediaSourceArguments.serializer(), args),
+                    ),
+                )
+            }
+
+            fun createAnimeToshoSave(): MediaSourceSave {
+                val args = RssMediaSourceArguments(
+                    name = "AnimeTosho (Multi / DDL / Torrents)",
+                    description = "Espejo global de descargas y torrents con subtítulos multi-idioma",
+                    iconUrl = "https://animetosho.org/favicon.ico",
+                    searchConfig = RssSearchConfig(
+                        searchUrl = "https://feed.animetosho.org/rss2?q={keyword}",
+                        filterByEpisodeSort = true,
+                        filterBySubjectName = false,
+                    ),
+                    tier = MediaSourceTier(1u),
+                )
+                val json = Json {
+                    encodeDefaults = true
+                    ignoreUnknownKeys = true
+                }
+                return MediaSourceSave(
+                    instanceId = Uuid.randomString(),
+                    mediaSourceId = "animetosho",
+                    factoryId = RssMediaSource.FactoryId,
+                    isEnabled = true,
+                    config = MediaSourceConfig(
+                        serializedArguments = json.encodeToJsonElement(RssMediaSourceArguments.serializer(), args),
+                    ),
+                )
+            }
 
             fun createAnimeOnlineNinjaSave(): MediaSourceSave {
                 val args = SelectorMediaSourceArguments(
@@ -89,7 +145,7 @@ data class MediaSourceSaves(
                     description = "Anime en streaming con subtítulos y doblaje latino",
                     iconUrl = "https://ww3.animeonline.ninja/wp-content/uploads/2020/05/cropped-favicon-192x192.png",
                     searchConfig = SelectorSearchConfig(
-                        searchUrl = "https://ww3.animeonline.ninja/?s={keyword}",
+                        searchUrl = "https://ww3.animeonline.ninja/search/?s={keyword}",
                         searchUseOnlyFirstWord = false,
                         searchRemoveSpecial = true,
                         searchUseSubjectNamesCount = 5,
@@ -107,7 +163,7 @@ data class MediaSourceSaves(
                         filterByEpisodeSort = false,
                         filterBySubjectName = false,
                     ),
-                    tier = MediaSourceTier(0u),
+                    tier = MediaSourceTier(2u),
                 )
                 val json = Json {
                     encodeDefaults = true
@@ -126,6 +182,8 @@ data class MediaSourceSaves(
 
             MediaSourceSaves(
                 buildList {
+                    add(createNyaaSave())
+                    add(createAnimeToshoSave())
                     add(createAnimeOnlineNinjaSave())
                     enabledBtSources.forEach { add(createSave(it, FactoryId(it), isEnabled = true)) }
                     disabledBtSources.forEach { add(createSave(it, FactoryId(it), isEnabled = false)) }

@@ -56,7 +56,7 @@ data class EpisodeInfo(
 }
 
 @Stable
-val EpisodeInfo.displayName get() = nameCn.ifBlank { name }
+val EpisodeInfo.displayName get() = name.ifBlank { nameCn }
 
 @Stable
 fun EpisodeInfo.renderEpisodeEp() = sort.toString()

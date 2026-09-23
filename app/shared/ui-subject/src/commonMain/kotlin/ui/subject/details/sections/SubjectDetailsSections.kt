@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.Tag
+import me.him188.ani.app.data.models.subject.displayName
 import me.him188.ani.app.ui.foundation.OutlinedTag
 import me.him188.ani.app.ui.lang.Lang
 import me.him188.ani.app.ui.lang.subject_details_air_date
@@ -204,7 +205,7 @@ fun SubjectTagsSection(
         ) {
             presentTags.forEach { tag ->
                 OutlinedTag(Modifier.clickable { onClickTag(tag) }) {
-                    Text(tag.name, style = MaterialTheme.typography.labelMedium)
+                    Text(tag.displayName, style = MaterialTheme.typography.labelMedium)
                 }
             }
         }

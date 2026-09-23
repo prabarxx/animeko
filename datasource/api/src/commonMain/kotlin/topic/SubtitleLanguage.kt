@@ -82,14 +82,17 @@ sealed class SubtitleLanguage(
     }
 
     object English : SubtitleLanguage("ENG", "英语") {
-        private val tokens = arrayOf("英", "English")
+        private val tokens = arrayOf("英", "English", "ENG", "Multi-Sub", "Multi-Subs", "Multisubs")
         override fun matches(text: String): Boolean {
             return tokens.any { text.contains(it, ignoreCase = true) }
         }
     }
 
     object Spanish : SubtitleLanguage("SPA", "Español") {
-        private val tokens = arrayOf("Español", "Espanol", "Spanish", "SPA", "ES", "Castellano", "Latino")
+        private val tokens = arrayOf(
+            "Español", "Espanol", "Spanish", "SPA", "Castellano", "Latino",
+            "Multi-Sub", "Multi-Subs", "Multisubs", "Multiple Subtitle",
+        )
         override fun matches(text: String): Boolean {
             return tokens.any { text.contains(it, ignoreCase = true) }
         }

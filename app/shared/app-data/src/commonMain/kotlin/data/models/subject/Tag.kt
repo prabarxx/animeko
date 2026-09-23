@@ -179,3 +179,247 @@ sealed class CanonicalTagKind(val values: List<String>) {
         fun matchOrNull(tag: String): CanonicalTagKind? = tagMap[tag]
     }
 }
+
+private val YEAR_MONTH_REGEX = Regex("""^(\d{4})年(\d{1,2})月$""")
+private val YEAR_REGEX = Regex("""^(\d{4})年$""")
+
+private val TAG_TRANSLATIONS: Map<String, String> = mapOf(
+    // Categorías
+    "短片" to "Cortometraje",
+    "剧场版" to "Película",
+    "TV" to "TV",
+    "OVA" to "OVA",
+    "MV" to "Video musical",
+    "CM" to "Comercial",
+    "WEB" to "ONA / Web",
+    "PV" to "Trailer promocional",
+    "动态漫画" to "Cómic animado",
+
+    // Origen / Fuente
+    "原创" to "Original",
+    "漫画改" to "Manga",
+    "漫改" to "Manga",
+    "游戏改" to "Videojuego",
+    "游改" to "Videojuego",
+    "小说改" to "Novela ligera",
+    "轻改" to "Novela ligera",
+    "页游改" to "Juego web",
+    "手游改" to "Juego móvil",
+    "Galgame改" to "Novela visual",
+    "乙女改" to "Juego otome",
+    "原创动画" to "Animación original",
+
+    // Géneros y temas
+    "科幻" to "Ciencia ficción",
+    "喜剧" to "Comedia",
+    "百合" to "Yuri",
+    "校园" to "Escolar",
+    "惊悚" to "Thriller",
+    "后宫" to "Harem",
+    "机战" to "Mecha",
+    "机器人" to "Robots",
+    "悬疑" to "Misterio",
+    "恋爱" to "Romance",
+    "奇幻" to "Fantasía",
+    "魔幻" to "Magia / Fantasía",
+    "推理" to "Detective / Misterio",
+    "运动" to "Deportes",
+    "耽美" to "BL / Yaoi",
+    "音乐" to "Música",
+    "战斗" to "Acción / Batallas",
+    "格斗" to "Lucha / Artes marciales",
+    "冒险" to "Aventura",
+    "萌系" to "Moe",
+    "穿越" to "Isekai / Viaje temporal",
+    "转生" to "Reencarnación",
+    "玄幻" to "Fantasía oriental",
+    "武侠" to "Artes marciales (Wuxia)",
+    "乙女" to "Otome",
+    "恐怖" to "Terror",
+    "历史" to "Histórico",
+    "日常" to "Recuentos de la vida",
+    "日常系" to "Recuentos de la vida",
+    "剧情" to "Drama",
+    "美食" to "Gastronomía",
+    "职场" to "Laboral / Trabajo",
+    "战争" to "Bélico / Guerra",
+    "特摄" to "Tokusatsu",
+    "犯罪" to "Crimen",
+    "黑帮" to "Mafia",
+    "生存" to "Supervivencia",
+    "末日" to "Apocalipsis",
+    "末世" to "Postapocalíptico",
+    "赛博朋克" to "Cyberpunk",
+    "时空穿梭" to "Viajes en el tiempo",
+    "心理" to "Psicológico",
+    "哲学" to "Filosófico",
+    "智斗" to "Guerra mental",
+
+    // Regiones
+    "欧美" to "Occidente",
+    "日本" to "Japón",
+    "美国" to "EE. UU.",
+    "中国" to "China",
+    "法国" to "Francia",
+    "韩国" to "Corea",
+    "俄罗斯" to "Rusia",
+    "英国" to "Reino Unido",
+    "苏联" to "URSS",
+    "香港" to "Hong Kong",
+    "捷克" to "Rep. Checa",
+    "台湾" to "Taiwán",
+
+    // Clasificación y Demografía
+    "R18" to "+18 (Adultos)",
+    "BL" to "Boys Love",
+    "GL" to "Girls Love",
+    "子供向" to "Infantil (Kodomo)",
+    "女性向" to "Josei",
+    "少女向" to "Shojo",
+    "少年向" to "Shonen",
+    "青年向" to "Seinen",
+
+    // Ambientación
+    "魔法少女" to "Magical Girls",
+    "超能力" to "Superpoderes",
+    "偶像" to "Idols",
+    "网游" to "Juegos online / VR",
+    "乐队" to "Banda musical",
+    "宫廷" to "Corte imperial",
+    "都市" to "Urbano",
+    "异世界" to "Isekai",
+    "性转" to "Cambio de género",
+    "龙傲天" to "Protagonista OP",
+    "凤傲天" to "Protagonista OP (Fem)",
+
+    // Personajes
+    "制服" to "Uniformes",
+    "兽耳" to "Orejas de animal",
+    "伪娘" to "Crossdressing",
+    "吸血鬼" to "Vampiros",
+    "丧尸" to "Zombis",
+    "僵尸" to "Zombis",
+    "妖怪" to "Yokai",
+    "妹控" to "Complejo de hermana",
+    "兄控" to "Complejo de hermano",
+    "萝莉" to "Loli",
+    "傲娇" to "Tsundere",
+    "女仆" to "Maid",
+    "巨乳" to "Pechos grandes",
+    "电波" to "Denpa",
+    "动物" to "Animales",
+    "正太" to "Shota",
+    "群像" to "Elenco coral",
+    "美少女" to "Bishojo",
+    "美少年" to "Bishonen",
+    "勇者" to "Héroe",
+    "魔王" to "Señor Oscuro",
+
+    // Emociones y Tono
+    "热血" to "Nekketsu / Pasión",
+    "治愈" to "Reconfortante",
+    "治愈系" to "Reconfortante",
+    "温情" to "Emotivo",
+    "催泪" to "Lacrimógeno",
+    "纯爱" to "Romance puro",
+    "友情" to "Amistad",
+    "致郁" to "Psicológico oscuro",
+    "致郁系" to "Turbio / Oscuro",
+    "搞笑" to "Comedia",
+    "沙雕" to "Comedia absurda",
+    "燃" to "Épico",
+    "狗粮" to "Romance dulce",
+    "暗黑" to "Oscuro",
+    "猎奇" to "Gore",
+    "肉番" to "Ecchi",
+    "福利" to "Ecchi",
+
+    // Formato
+    "黑白" to "Blanco y negro",
+    "3D" to "3D CGI",
+    "水墨" to "Tinta china",
+    "定格" to "Stop-motion",
+    "粘土" to "Plastilina",
+    "剪纸" to "Papel recortado",
+    "转描" to "Rotoscopía",
+    "三渲二" to "Cel shading",
+
+    // Franquicias populares
+    "高达" to "Gundam",
+    "东方" to "Touhou",
+    "Fate" to "Fate",
+    "空之境界" to "Kara no Kyoukai",
+    "柯南" to "Detective Conan",
+    "光之美少女" to "Pretty Cure",
+    "哆啦A梦" to "Doraemon",
+    "物语系列" to "Monogatari",
+    "刀剑神域" to "Sword Art Online",
+    "进击的巨人" to "Attack on Titan",
+
+    // Estado / Transmisión
+    "续作" to "Secuela",
+    "新作" to "Estreno",
+    "补番" to "Por ver",
+    "神作" to "Obra maestra",
+    "烂尾" to "Final decepcionante",
+    "泡面番" to "Cortometrajes",
+    "季番" to "Temporada",
+    "半年番" to "Dos partes",
+    "年番" to "Anual",
+    "经典" to "Clásico",
+    "童年" to "Nostalgia",
+    "特番" to "Especial",
+    "总集篇" to "Recopilación",
+    "未放送" to "No emitido",
+    "完结" to "Finalizado",
+    "连载中" to "En emisión",
+
+    // Estudios
+    "京阿尼" to "Kyoto Animation",
+    "飞碟社" to "ufotable",
+    "骨头社" to "Bones",
+    "霸权社" to "WIT Studio",
+    "疯房子" to "Madhouse",
+    "日升" to "Sunrise",
+    "扳机社" to "Trigger",
+    "大卫社" to "David Production",
+    "白狐社" to "White Fox",
+    "吉卜力" to "Studio Ghibli",
+    "新海诚" to "Makoto Shinkai",
+    "宫崎骏" to "Hayao Miyazaki",
+)
+
+/**
+ * Traduce una etiqueta (tag) en chino de Bangumi a español comprensible.
+ * Si es una fecha (ej. 2024年10月), la convierte al formato de temporada (Otoño 2024).
+ */
+@Stable
+fun translateTag(name: String): String {
+    TAG_TRANSLATIONS[name]?.let { return it }
+
+    val yearMonthMatch = YEAR_MONTH_REGEX.matchEntire(name)
+    if (yearMonthMatch != null) {
+        val (year, monthStr) = yearMonthMatch.destructured
+        val month = monthStr.toIntOrNull() ?: return name
+        val season = when (month) {
+            1 -> "Invierno"
+            4 -> "Primavera"
+            7 -> "Verano"
+            10 -> "Otoño"
+            else -> "$month/"
+        }
+        return if (season.endsWith("/")) "$season$year" else "$season $year"
+    }
+
+    val yearMatch = YEAR_REGEX.matchEntire(name)
+    if (yearMatch != null) {
+        return yearMatch.groupValues[1]
+    }
+
+    return name
+}
+
+@Stable
+val Tag.displayName: String
+    get() = translateTag(name)
+

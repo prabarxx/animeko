@@ -74,13 +74,15 @@ class DanmakuRepository(
     private val sender by lazy { AniDanmakuSender(danmakuApi) }
     private val localProvider = LocalDanmakuProvider(danmakuDao)
     private val remoteProviders by lazy {
-        listOf(
+        listOfNotNull(
             AniDanmakuProvider(danmakuApi),
-            DandanplayDanmakuProvider(
-                dandanplayAppId = currentAniBuildConfig.dandanplayAppId,
-                dandanplayAppSecret = currentAniBuildConfig.dandanplayAppSecret,
-                httpClientProvider.get(),
-            ),
+            if (currentAniBuildConfig.dandanplayAppId.isNotBlank()) {
+                DandanplayDanmakuProvider(
+                    dandanplayAppId = currentAniBuildConfig.dandanplayAppId,
+                    dandanplayAppSecret = currentAniBuildConfig.dandanplayAppSecret,
+                    httpClientProvider.get(),
+                )
+            } else null,
         )
     }
 

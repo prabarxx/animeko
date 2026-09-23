@@ -87,10 +87,10 @@ data class SubjectInfo(
     /**
      * 主要显示名称
      */
-    val displayName: String get() = nameCn.takeIf { it.isNotBlank() } ?: name
+    val displayName: String get() = name.takeIf { it.isNotBlank() } ?: nameCn
 
     /**
-     * 主中文名, 主日文名, 以及所有别名
+     * 主日文/罗马音名, 以及所有别名, 主中文名
      */
     val allNames by lazy(LazyThreadSafetyMode.PUBLICATION) {
         buildList {
@@ -98,9 +98,9 @@ data class SubjectInfo(
             fun addIfNotBlank(name2: String) {
                 if (name2.isNotBlank()) add(name2)
             }
-            addIfNotBlank(nameCn) // name cn 需要是第一个, SelectorMediaSource 依赖这个性质
             addIfNotBlank(name)
             aliases.forEach { addIfNotBlank(it) }
+            addIfNotBlank(nameCn)
         }
     }
 
@@ -149,7 +149,7 @@ data class SubjectInfo(
 }
 
 @Stable
-val SubjectInfo.nameCnOrName get() = nameCn.takeIf { it.isNotBlank() } ?: name
+val SubjectInfo.nameCnOrName get() = name.takeIf { it.isNotBlank() } ?: nameCn
 
 fun SubjectInfo.toNavPlaceholder(): SubjectDetailPlaceholder {
     return SubjectDetailPlaceholder(subjectId, name, nameCn, imageLarge)

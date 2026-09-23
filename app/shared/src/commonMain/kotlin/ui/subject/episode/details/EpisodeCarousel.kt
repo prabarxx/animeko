@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
+import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.domain.media.cache.EpisodeCacheStatus
 import me.him188.ani.app.domain.media.cache.isCachedOrCaching
 import me.him188.ani.app.tools.MonoTasker
@@ -164,7 +165,7 @@ fun EpisodeCarousel(
                         },
                         title = {
                             Text(
-                                collection.episodeInfo.nameCn.ifEmpty {
+                                collection.episodeInfo.displayName.ifEmpty {
                                     stringResource(
                                         Lang.subject_episode_default_title,
                                         collection.episodeInfo.sort.toString(),

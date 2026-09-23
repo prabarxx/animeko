@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.data.models.subject.CanonicalTagKind
+import me.him188.ani.app.data.models.subject.translateTag
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.lang.Lang
 import me.him188.ani.app.ui.lang.exploration_search_filter_audience
@@ -156,7 +157,7 @@ fun SearchFilterChip(
         DropdownMenu(expanded = showDropdown, onDismissRequest = { showDropdown = false }) {
             for (value in state.values) {
                 DropdownMenuItem(
-                    text = { Text(value) },
+                    text = { Text(translateTag(value)) },
                     {
                         onClickItemText(value)
                         showDropdown = false
@@ -179,7 +180,7 @@ private fun renderChipLabel(
     labels: SearchFilterLabels,
 ): String {
     if (state.hasSelection) {
-        return state.selected.joinToString(",")
+        return state.selected.joinToString(",") { translateTag(it) }
     }
     return when (state.kind) {
         CanonicalTagKind.Audience -> labels.audience

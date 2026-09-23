@@ -27,6 +27,7 @@ import me.him188.ani.app.data.models.subject.RatingInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringKind
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.data.models.subject.displayName
 import me.him188.ani.app.data.models.subject.kind
 import me.him188.ani.app.data.models.subject.nameCnOrName
 import me.him188.ani.app.data.network.LightRelatedCharacterInfo
@@ -98,7 +99,7 @@ class SubjectPreviewItemInfo(
                 append(
                     (sourceTag + genreTags)
                         .take(3)
-                        .joinToString(" / ") { it.name },
+                        .joinToString(" / ") { it.displayName },
                 )
             }
             val staff = relatedPersonList?.let {

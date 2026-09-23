@@ -57,13 +57,14 @@ constructor(
      * 为 `null` 表示任意.
      */
     val fallbackSubtitleLanguageIds: List<String>? = listOf(
-        SubtitleLanguage.ChineseSimplified,
-        SubtitleLanguage.ChineseTraditional,
+        SubtitleLanguage.Spanish,
+        SubtitleLanguage.English,
+        SubtitleLanguage.Japanese,
     ).map { it.id },
     /**
      * 是否显示没有解析到字幕的资源, 这可能是本身是生肉, 也可能是字幕未匹配到. 是生肉的可能性更高.
      */
-    val showWithoutSubtitle: Boolean = false,
+    val showWithoutSubtitle: Boolean = true,
 
     /**
      * 优先使用的媒体源. Can be [ANY_FILTER]

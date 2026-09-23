@@ -32,7 +32,7 @@ data class UISettings(
      * @since 4.9
      * @see me.him188.ani.app.ui.lang.SupportedLocales
      */
-    val appLanguage: @Serializable(LocaleSerializer::class) Locale? = null,
+    val appLanguage: @Serializable(LocaleSerializer::class) Locale? = Locale("es"),
 
     /**
      * 启动 App 时的初始页面

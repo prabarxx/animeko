@@ -13,10 +13,18 @@ import androidx.datastore.core.DataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.domain.mediasource.instance.MediaSourceSave
+import me.him188.ani.app.domain.mediasource.web.SelectorMediaSource
+import me.him188.ani.app.domain.mediasource.web.SelectorMediaSourceArguments
+import me.him188.ani.app.domain.mediasource.web.SelectorSearchConfig
+import me.him188.ani.app.domain.mediasource.web.format.SelectorChannelFormatNoChannel
+import me.him188.ani.app.domain.mediasource.web.format.SelectorSubjectFormatA
 import me.him188.ani.datasources.api.source.FactoryId
 import me.him188.ani.datasources.api.source.MediaSourceConfig
+import me.him188.ani.datasources.api.source.MediaSourceTier
+import me.him188.ani.datasources.api.topic.SubtitleLanguage
 import me.him188.ani.datasources.mikan.MikanCNMediaSource
 import me.him188.ani.utils.platform.Uuid
 import me.him188.ani.utils.platform.collections.partiallyReorderBy
@@ -75,8 +83,50 @@ data class MediaSourceSaves(
                 listOf(MikanCNMediaSource.ID, "dmhy")
             val disabledBtSources: List<String> = listOf()
 
+            fun createAnimeOnlineNinjaSave(): MediaSourceSave {
+                val args = SelectorMediaSourceArguments(
+                    name = "AnimeOnline Ninja",
+                    description = "Anime en streaming con subtítulos y doblaje latino",
+                    iconUrl = "https://ww3.animeonline.ninja/wp-content/uploads/2020/05/cropped-favicon-192x192.png",
+                    searchConfig = SelectorSearchConfig(
+                        searchUrl = "https://ww3.animeonline.ninja/?s={keyword}",
+                        searchUseOnlyFirstWord = false,
+                        searchRemoveSpecial = true,
+                        searchUseSubjectNamesCount = 5,
+                        defaultSubtitleLanguage = SubtitleLanguage.Spanish,
+                        subjectFormatId = SelectorSubjectFormatA.id,
+                        selectorSubjectFormatA = SelectorSubjectFormatA.Config(
+                            selectLists = "div.result-item article .title a",
+                            preferShorterName = true,
+                        ),
+                        channelFormatId = SelectorChannelFormatNoChannel.id,
+                        selectorChannelFormatNoChannel = SelectorChannelFormatNoChannel.Config(
+                            selectEpisodes = "ul.episodios li .episodiotitle a, ul.episodios li a, .episodios li a",
+                            matchEpisodeSortFromName = """(?i)(?:(?:episodio|cap[ií]tulo|ep\.?)\s*)?(?<ep>\d+(?:\.\d+)?)""",
+                        ),
+                        filterByEpisodeSort = false,
+                        filterBySubjectName = false,
+                    ),
+                    tier = MediaSourceTier(0u),
+                )
+                val json = Json {
+                    encodeDefaults = true
+                    ignoreUnknownKeys = true
+                }
+                return MediaSourceSave(
+                    instanceId = Uuid.randomString(),
+                    mediaSourceId = "animeonline-ninja",
+                    factoryId = SelectorMediaSource.FactoryId,
+                    isEnabled = true,
+                    config = MediaSourceConfig(
+                        serializedArguments = json.encodeToJsonElement(SelectorMediaSourceArguments.serializer(), args),
+                    ),
+                )
+            }
+
             MediaSourceSaves(
                 buildList {
+                    add(createAnimeOnlineNinjaSave())
                     enabledBtSources.forEach { add(createSave(it, FactoryId(it), isEnabled = true)) }
                     disabledBtSources.forEach { add(createSave(it, FactoryId(it), isEnabled = false)) }
                 },

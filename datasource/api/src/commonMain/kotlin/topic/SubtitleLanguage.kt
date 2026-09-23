@@ -88,6 +88,13 @@ sealed class SubtitleLanguage(
         }
     }
 
+    object Spanish : SubtitleLanguage("SPA", "Español") {
+        private val tokens = arrayOf("Español", "Espanol", "Spanish", "SPA", "ES", "Castellano", "Latino")
+        override fun matches(text: String): Boolean {
+            return tokens.any { text.contains(it, ignoreCase = true) }
+        }
+    }
+
     class Other(
         displayName: String
     ) : SubtitleLanguage("Other", displayName) {
@@ -118,6 +125,7 @@ sealed class SubtitleLanguage(
     companion object {
         val matchableEntries by lazy {
             listOf(
+                Spanish,
                 ChineseSimplified,
                 ChineseTraditional,
                 ChineseCantonese,

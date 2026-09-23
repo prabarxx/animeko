@@ -814,6 +814,7 @@ internal fun renderLocale(it: Locale?): String {
 
     // The following code does not need to be localized
     return when (it.language) {
+        "es", "spa" -> "Español (Latinoamérica)"
         "en", "eng" -> "English"
         "zh", "chi", "zho" -> when (it.region) {
             "CN" -> "简体中文"

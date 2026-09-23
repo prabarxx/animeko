@@ -11,6 +11,11 @@ local.properties
 /*.patch
 bin/
 Podfile.lock
+build.log
+__pycache__/
+*.jks
+*.keystore
+
 
 # Local source files
 **/local.kt

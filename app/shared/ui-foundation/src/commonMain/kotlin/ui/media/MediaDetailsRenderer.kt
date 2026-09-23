@@ -168,6 +168,7 @@ fun renderSubtitleLanguage(id: String, strings: MediaDetailsStrings): String {
 
 fun renderSubtitleLanguage(language: SubtitleLanguage, strings: MediaDetailsStrings): String {
     return when (language) {
+        SubtitleLanguage.Spanish -> language.displayName
         SubtitleLanguage.ChineseCantonese -> strings.subtitleLanguageChineseCantonese
         SubtitleLanguage.ChineseSimplified -> strings.subtitleLanguageChineseSimplified
         SubtitleLanguage.ChineseTraditional -> strings.subtitleLanguageChineseTraditional

@@ -130,6 +130,14 @@ class MediaSelectorFilterSortAlgorithm {
             return exclude(MediaExclusionReason.MediaWithoutSubtitle)
         }
 
+        if (media.kind == MediaSourceKind.BitTorrent) {
+            val seeders = media.properties.seeders
+            val minSeeders = settings.minSeedersForTorrent
+            if (minSeeders > 0 && seeders != null && seeders < minSeeders) {
+                return exclude(MediaExclusionReason.InsufficientSeeders(seeders = seeders, minRequired = minSeeders))
+            }
+        }
+
         val subtitleKind = media.properties.subtitleKind
         if (context.subtitlePreferences != null && subtitleKind != null) {
             if (context.subtitlePreferences[subtitleKind] == SubtitleKindPreference.HIDE) {
@@ -359,6 +367,10 @@ class MediaSelectorFilterSortAlgorithm {
                     } else {
                         0
                     }
+                }
+                // 5. Prioritize torrents with more seeders
+                .thenByDescending { maybe ->
+                    maybe.original.properties.seeders ?: -1
                 }
                 .thenByDescending {
                     it.original.publishedTime

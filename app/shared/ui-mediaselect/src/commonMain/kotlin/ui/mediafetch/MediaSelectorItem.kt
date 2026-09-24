@@ -113,6 +113,7 @@ internal fun MediaSelectorItem(
                 MediaExclusionReason.FromSequelSeason -> seasonMismatchText
                 MediaExclusionReason.FromSeriesSeason -> seasonMismatchText
                 MediaExclusionReason.SubjectNameMismatch -> subjectTitleMismatchText
+                is MediaExclusionReason.InsufficientSeeders -> "Pocos sembradores (${reason.seeders}/${reason.minRequired})"
             }
         }
     }
@@ -133,6 +134,17 @@ internal fun MediaSelectorItem(
         },
         title = { Text(media.originalTitle) },
         labels = {
+            // Seeders chip
+            media.properties.seeders?.let { seeders ->
+                InputChip(
+                    selected = false,
+                    onClick = { /* no-op */ },
+                    label = { Text("🌱 $seeders") },
+                    colors = InputChipDefaults.inputChipColors(
+                        labelColor = if (seeders >= 5) MaterialTheme.colorScheme.primary else if (seeders > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error,
+                    ),
+                )
+            }
             // Size chip
             if (media.properties.size != FileSize.Zero && media.properties.size != FileSize.Unspecified) {
                 InputChip(

@@ -112,6 +112,11 @@ sealed class MediaExclusionReason {
      * 资源标题不匹配 (不包含 [SubjectInfo.allNames])
      */
     data object SubjectNameMismatch : MediaExclusionReason()
+
+    /**
+     * BT 做种数 (seeders) 不足
+     */
+    data class InsufficientSeeders(val seeders: Int, val minRequired: Int) : MediaExclusionReason()
 }
 
 data class MatchMetadata(

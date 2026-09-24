@@ -287,6 +287,10 @@ data class MediaProperties @SerializationOnly constructor(
      * @since 3.7
      */
     val subtitleKind: SubtitleKind? = null, // #615
+    /**
+     * 做种者数量 (seeders), 主要用于 BT 资源. 为 `null` 表示数据源不支持该属性.
+     */
+    val seeders: Int? = null,
     @Suppress("unused")
     @Transient private val _primaryConstructorMarker: Unit = Unit,
 ) {
@@ -302,11 +306,28 @@ data class MediaProperties @SerializationOnly constructor(
         subtitleKind: SubtitleKind?,
     ) : this(
         subjectName, episodeName, subtitleLanguageIds, resolution, alliance, size, subtitleKind,
+        seeders = null,
+        _primaryConstructorMarker = Unit,
+    )
+
+    @OptIn(SerializationOnly::class)
+    constructor(
+        subjectName: String?,
+        episodeName: String?,
+        subtitleLanguageIds: List<String>,
+        resolution: String,
+        alliance: String,
+        size: FileSize,
+        subtitleKind: SubtitleKind?,
+        seeders: Int?,
+    ) : this(
+        subjectName, episodeName, subtitleLanguageIds, resolution, alliance, size, subtitleKind,
+        seeders = seeders,
         _primaryConstructorMarker = Unit,
     )
 
     override fun toString(): String {
-        return "MediaProperties(subtitleLanguageIds=$subtitleLanguageIds, resolution='$resolution', alliance='$alliance', size=$size)"
+        return "MediaProperties(subtitleLanguageIds=$subtitleLanguageIds, resolution='$resolution', alliance='$alliance', size=$size, seeders=$seeders)"
     }
 }
 

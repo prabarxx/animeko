@@ -50,6 +50,10 @@ data class RssItem(
      * 原始 XML. 仅在测试时才有值, 其他时候为 `null` 以避免保持内存占用.
      */
     @Transient val origin: Element? = null,
+    @Transient val seeders: Int? = null,
+    @Transient val leechers: Int? = null,
+    @Transient val downloads: Int? = null,
+    @Transient val infoHash: String? = null,
 )
 
 fun RssItem.guessResourceLocation(): ResourceLocation? {

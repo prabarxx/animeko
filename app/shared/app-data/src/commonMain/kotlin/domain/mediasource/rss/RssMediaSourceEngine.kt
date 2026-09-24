@@ -74,11 +74,19 @@ abstract class RssMediaSourceEngine {
     ): Result {
         val encodedUrl = MediaSourceEngineHelpers.encodeUrlSegment(query.subjectName)
 
-        val finalUrl = Url(
-            searchConfig.searchUrl
-                .replace("{keyword}", encodedUrl)
-                .replace("{page}", page.toString()),
-        )
+        var finalSearchUrl = searchConfig.searchUrl
+            .replace("{keyword}", encodedUrl)
+            .replace("{page}", page.toString())
+
+        if (finalSearchUrl.contains("nyaa.si") && !finalSearchUrl.contains("s=seeders")) {
+            finalSearchUrl = if (finalSearchUrl.contains("?")) {
+                "$finalSearchUrl&s=seeders&o=desc"
+            } else {
+                "$finalSearchUrl?s=seeders&o=desc"
+            }
+        }
+
+        val finalUrl = Url(finalSearchUrl)
 
         return searchImpl(finalUrl, searchConfig, query, page, mediaSourceId)
     }
@@ -133,6 +141,7 @@ abstract class RssMediaSourceEngine {
                         .removePrefix("【").trim(),
                     size = item.getMediaSize(),
                     subtitleKind = details.subtitleKind,
+                    seeders = item.seeders,
                 ),
                 episodeRange = details.episodeRange,
                 kind = MediaSourceKind.BitTorrent,

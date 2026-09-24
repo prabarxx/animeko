@@ -91,7 +91,7 @@ data class MediaSourceSaves(
                     description = "Torrents de anime con subtítulos en español, multi-idioma e inglés",
                     iconUrl = "https://nyaa.si/static/favicon.png",
                     searchConfig = RssSearchConfig(
-                        searchUrl = "https://nyaa.si/?page=rss&c=1_0&q={keyword}",
+                        searchUrl = "https://nyaa.si/?page=rss&c=1_0&s=seeders&o=desc&q={keyword}",
                         filterByEpisodeSort = true,
                         filterBySubjectName = false,
                     ),

@@ -76,6 +76,10 @@ constructor(
      * 实际生效值为此值与数据源配置中定义的值的较小者. 为 0 时禁用缓存.
      */
     val webSearchCacheTtl: Duration = 6.hours, // 注意, 这是 'enum'. 查看 UI 代码以确定有哪些值可以选.
+    /**
+     * BT 做种数 (seeders) 最低阈值. 少于此数量的种子将被过滤排除. 默认为 1 (过滤 0 做种的死种).
+     */
+    val minSeedersForTorrent: Int = 1,
     @Suppress("PropertyName") @Transient val _placeholder: Int = 0,
 ) {
     companion object {
@@ -94,6 +98,7 @@ constructor(
         @Suppress("DEPRECATION_ERROR")
         val AllVisible = Default.copy(
             hideSingleEpisodeForCompleted = false,
+            minSeedersForTorrent = 0,
         )
     }
 }

@@ -516,6 +516,29 @@ internal fun SettingsScope.MediaSelectionGroup(
                 title = { Text(stringResource(Lang.settings_media_auto_enable_last)) },
                 description = { Text(stringResource(Lang.settings_media_auto_enable_last_description)) },
             )
+
+            HorizontalDividerItem()
+
+            DropdownItem(
+                selected = { mediaSelectorSettings.minSeedersForTorrent },
+                values = { listOf(0, 1, 2, 3, 5, 10) },
+                itemText = { seeders ->
+                    Text(
+                        when (seeders) {
+                            0 -> "Desactivado (mostrar todos)"
+                            1 -> "Al menos 1 sembrador (recomendado)"
+                            else -> "Al menos $seeders sembradores"
+                        },
+                    )
+                },
+                onSelect = {
+                    state.mediaSelectorSettingsState.update(
+                        mediaSelectorSettings.copy(minSeedersForTorrent = it),
+                    )
+                },
+                title = { Text("Sembradores mínimos para torrents") },
+                description = { Text("Filtra y oculta torrents que tengan menos sembradores de los requeridos") },
+            )
         }
     }
 }

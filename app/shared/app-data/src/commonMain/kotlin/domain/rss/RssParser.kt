@@ -66,6 +66,26 @@ class RssParser(
 
     private fun parseItem(element: Element): RssItem {
         val children = element.childNodes().asSequence().filterIsInstance<Element>()
+        val seeders = children.find { el ->
+            val tag = el.tagName().lowercase()
+            tag == "nyaa:seeders" || tag.endsWith(":seeders") || tag == "seeders"
+        }?.text()?.trim()?.toIntOrNull()
+
+        val leechers = children.find { el ->
+            val tag = el.tagName().lowercase()
+            tag == "nyaa:leechers" || tag.endsWith(":leechers") || tag == "leechers"
+        }?.text()?.trim()?.toIntOrNull()
+
+        val downloads = children.find { el ->
+            val tag = el.tagName().lowercase()
+            tag == "nyaa:downloads" || tag.endsWith(":downloads") || tag == "downloads"
+        }?.text()?.trim()?.toIntOrNull()
+
+        val infoHash = children.find { el ->
+            val tag = el.tagName().lowercase()
+            tag == "nyaa:infohash" || tag.endsWith(":infohash") || tag == "infohash"
+        }?.text()?.trim()
+
         return RssItem(
             title = children.findTagText("title").orEmpty(),
             description = children.findTagText("description").orEmpty(),
@@ -77,6 +97,10 @@ class RssParser(
             guid = children.findTagText("guid").orEmpty(),
             enclosure = children.find { it.tagName() == "enclosure" }?.let { parseEnclosure(it) },
             origin = if (includeOrigin) element else null,
+            seeders = seeders,
+            leechers = leechers,
+            downloads = downloads,
+            infoHash = infoHash,
         )
     }
 

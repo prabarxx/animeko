@@ -27,7 +27,9 @@ data class LightSubjectInfo(
     val imageLarge: String,
 )
 
-val LightSubjectInfo.displayName get() = name.takeIf { it.isNotBlank() } ?: nameCn
+val LightSubjectInfo.displayName: String
+    get() = me.him188.ani.app.domain.subject.SubjectTitleResolver.getCachedReadableTitle(subjectId)
+        ?: me.him188.ani.app.domain.subject.SubjectTitleResolver.pickReadableTitle(name, nameCn)
 
 data class LightEpisodeInfo(
     val episodeId: Int,

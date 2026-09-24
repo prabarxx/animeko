@@ -70,11 +70,13 @@ class RecommendationRepository(
 
     private fun AniSubjectRecommendation.toRecommendedSubjectInfo(): RecommendedSubjectInfo? {
         val id = subjectId?.takeIf { it > 0 }?.toInt() ?: return null
+        val readable = me.him188.ani.app.domain.subject.SubjectTitleResolver.getCachedReadableTitle(id)
+            ?: me.him188.ani.app.domain.subject.SubjectTitleResolver.pickReadableTitle(subjectName, subjectNameCn)
         return RecommendedSubjectInfo(
             bangumiId = id,
             nameCn = subjectNameCn,
             imageLarge = imageUrl,
-            name = subjectName,
+            name = readable,
         )
     }
 }

@@ -85,9 +85,16 @@ data class SubjectInfo(
     }
 
     /**
-     * 主要显示名称
+     * 主要显示名称 (优先西文/罗马音/英文译名，避免出现难以阅读的日文汉字/中文字符)
      */
-    val displayName: String get() = name.takeIf { it.isNotBlank() } ?: nameCn
+    val displayName: String
+        get() {
+            val title = me.him188.ani.app.domain.subject.SubjectTitleResolver.pickReadableTitle(name, nameCn, aliases)
+            if (subjectId > 0) {
+                me.him188.ani.app.domain.subject.SubjectTitleResolver.setCachedReadableTitle(subjectId, title)
+            }
+            return title
+        }
 
     /**
      * 主日文/罗马音名, 以及所有别名, 主中文名

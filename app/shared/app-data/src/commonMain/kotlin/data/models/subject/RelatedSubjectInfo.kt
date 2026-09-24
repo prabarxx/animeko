@@ -13,7 +13,9 @@ class RelatedSubjectInfo(
     val nameCn: String,
     val image: String?,
 ) {
-    val displayName get() = nameCn.ifBlank { name } ?: nameCn
+    val displayName: String
+        get() = me.him188.ani.app.domain.subject.SubjectTitleResolver.getCachedReadableTitle(subjectId)
+            ?: me.him188.ani.app.domain.subject.SubjectTitleResolver.pickReadableTitle(name ?: "", nameCn)
 
     companion object {
         fun sortList(subjectList: List<RelatedSubjectInfo>): List<RelatedSubjectInfo> {

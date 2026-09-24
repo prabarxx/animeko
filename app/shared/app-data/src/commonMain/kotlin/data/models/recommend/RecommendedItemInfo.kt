@@ -21,7 +21,9 @@ data class RecommendedSubjectInfo(
     val imageLarge: String,
     val name: String = "",
 ) : RecommendedItemInfo() {
-    val displayName: String get() = name.ifBlank { nameCn }
+    val displayName: String
+        get() = me.him188.ani.app.domain.subject.SubjectTitleResolver.getCachedReadableTitle(bangumiId)
+            ?: me.him188.ani.app.domain.subject.SubjectTitleResolver.pickReadableTitle(name, nameCn)
 }
 
 

@@ -11,7 +11,7 @@ on:
       tag_name:
         description: 'Nombre del tag o versión de release (ej. v6.2.2-es)'
         required: false
-        default: 'v6.2.6-es'
+        default: 'v6.2.7-es'
 
 permissions:
   contents: write

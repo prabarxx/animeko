@@ -595,11 +595,19 @@ fun KoinApplication.startCommonKoinModule(
     }
 
     coroutineScope.launch {
-        val currentSaves = context.dataStores.mediaSourceSaveStore.data.first()
-        val defaultInstanceIds = MediaSourceSaves.Default.instances.map { it.instanceId }
-        // 如果当前的数据源列表的 instance ids 都在默认列表里, 说明用户没有自定义过数据源, 直接写入默认源
-        if (currentSaves.instances.all { it.instanceId in defaultInstanceIds }) {
-            context.dataStores.mediaSourceSaveStore.updateData { MediaSourceSaves.Default }
+        context.dataStores.mediaSourceSaveStore.updateData { current ->
+            val cleaned = current.instances.filterNot {
+                it.mediaSourceId in setOf("mikan", "mikancn", "dmhy") ||
+                it.factoryId.value in setOf("mikan", "mikancn", "dmhy")
+            }
+            val hasNyaa = cleaned.any { it.mediaSourceId == "nyaa-anime" }
+            val hasTosho = cleaned.any { it.mediaSourceId == "animetosho" }
+            val hasNinja = cleaned.any { it.mediaSourceId == "animeonline-ninja" }
+            if (!hasNyaa || !hasTosho || !hasNinja || cleaned.isEmpty()) {
+                MediaSourceSaves.Default
+            } else {
+                current.copy(instances = cleaned)
+            }
         }
     }
 

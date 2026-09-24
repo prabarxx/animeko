@@ -99,7 +99,7 @@ private fun RecommendedSubjectCard(
     modifier: Modifier = Modifier,
 ) {
     SubjectCoverCard(
-        name = item?.displayName ?: item?.nameCn,
+        name = item?.displayName ?: item?.name ?: item?.nameCn,
         image = item?.imageLarge,
         isPlaceholder = item == null,
         onClick = onClick,

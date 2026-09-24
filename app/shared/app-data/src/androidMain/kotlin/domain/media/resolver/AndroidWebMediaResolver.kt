@@ -11,12 +11,17 @@ package me.him188.ani.app.domain.media.resolver
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.os.Message
 import android.webkit.CookieManager
+import android.webkit.JsResult
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import me.him188.ani.utils.logging.warn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import kotlinx.coroutines.CompletableDeferred
@@ -230,16 +235,70 @@ class AndroidWebViewVideoExtractor(
                 webView.destroy()
             }
         }
-        webView.settings.javaScriptEnabled = true
-        webView.settings.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-        webView.settings.domStorageEnabled = true
+        webView.settings.apply {
+            javaScriptEnabled = true
+            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+            domStorageEnabled = true
+            javaScriptCanOpenWindowsAutomatically = false
+            setSupportMultipleWindows(false)
+            mediaPlaybackRequiresUserGesture = false
+        }
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onCreateWindow(
+                view: WebView?,
+                isDialog: Boolean,
+                isUserGesture: Boolean,
+                resultMsg: Message?
+            ): Boolean {
+                logger.info { "Blocked popup window creation in video extraction WebView" }
+                return false
+            }
+
+            override fun onJsAlert(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
+                result?.cancel()
+                return true
+            }
+
+            override fun onJsConfirm(view: WebView?, url: String?, message: String?, result: JsResult?): Boolean {
+                result?.cancel()
+                return true
+            }
+        }
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                injectAdBlockScript(view)
+            }
+
+            override fun onPageFinished(view: WebView, url: String?) {
+                super.onPageFinished(view, url)
+                injectAdBlockScript(view)
+            }
+
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val url = request.url ?: return false
+                val urlStr = url.toString()
+                if (WebAdBlocker.isBlockedScheme(url.scheme)) {
+                    logger.warn { "Blocked non-web navigation intent in video extractor: $urlStr" }
+                    return true
+                }
+                if (WebAdBlocker.isAdUrl(urlStr)) {
+                    logger.info { "Blocked ad redirect in video extractor: $urlStr" }
+                    return true
+                }
+                if (handleUrl(view, urlStr)) {
+                    return true
+                }
+                return false
+            }
+
             override fun shouldInterceptRequest(
                 view: WebView,
                 request: WebResourceRequest
             ): WebResourceResponse? {
                 val url = request.url ?: return super.shouldInterceptRequest(view, request)
-                if (handleUrl(view, url.toString())) {
+                val urlStr = url.toString()
+                if (handleUrl(view, urlStr)) {
                     logger.info { "Found video resource via shouldInterceptRequest: $url" }
                     // 拦截, 以防资源只能加载一次
                     return WebResourceResponse(
@@ -247,6 +306,23 @@ class AndroidWebViewVideoExtractor(
                         "UTF-8", 500,
                         "Internal Server Error",
                         mapOf(),
+                        ByteArrayInputStream(ByteArray(0)),
+                    )
+                }
+                if (WebAdBlocker.isAdUrl(urlStr)) {
+                    val mime = when {
+                        urlStr.contains(".js") || urlStr.contains("script") -> "text/javascript"
+                        urlStr.contains(".css") -> "text/css"
+                        urlStr.contains(".png") -> "image/png"
+                        urlStr.contains(".jpg") || urlStr.contains(".jpeg") -> "image/jpeg"
+                        else -> "text/plain"
+                    }
+                    return WebResourceResponse(
+                        mime,
+                        "UTF-8",
+                        200,
+                        "OK",
+                        emptyMap(),
                         ByteArrayInputStream(ByteArray(0)),
                     )
                 }
@@ -260,5 +336,27 @@ class AndroidWebViewVideoExtractor(
                 super.onLoadResource(view, url)
             }
         }
+    }
+
+    private fun injectAdBlockScript(view: WebView) {
+        val script = """
+            (function() {
+                try {
+                    window.open = function() { return null; };
+                    window.alert = function() {};
+                    window.confirm = function() { return false; };
+                    window.prompt = function() { return null; };
+                    window.onbeforeunload = null;
+                    document.addEventListener('click', function(e) {
+                        var el = e.target;
+                        while (el && el.tagName !== 'A' && el !== document) { el = el.parentElement; }
+                        if (el && el.tagName === 'A' && el.target === '_blank') {
+                            el.target = '_self';
+                        }
+                    }, true);
+                } catch(e) {}
+            })();
+        """.trimIndent()
+        view.evaluateJavascript(script, null)
     }
 }

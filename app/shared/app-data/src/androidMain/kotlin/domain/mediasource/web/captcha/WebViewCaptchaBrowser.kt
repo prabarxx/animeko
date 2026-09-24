@@ -145,6 +145,18 @@ class WebViewCaptchaBrowser private constructor(
                 }
             }
 
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                val url = request.url ?: return false
+                val urlStr = url.toString()
+                if (me.him188.ani.app.domain.media.resolver.WebAdBlocker.isBlockedScheme(url.scheme)) {
+                    return true
+                }
+                if (me.him188.ani.app.domain.media.resolver.WebAdBlocker.isAdUrl(urlStr)) {
+                    return true
+                }
+                return false
+            }
+
             override fun shouldInterceptRequest(
                 view: WebView,
                 request: WebResourceRequest,
@@ -157,6 +169,16 @@ class WebViewCaptchaBrowser private constructor(
                         "UTF-8",
                         500,
                         "Internal Server Error",
+                        emptyMap(),
+                        ByteArrayInputStream(ByteArray(0)),
+                    )
+                }
+                if (me.him188.ani.app.domain.media.resolver.WebAdBlocker.isAdUrl(url)) {
+                    return WebResourceResponse(
+                        "text/plain",
+                        "UTF-8",
+                        200,
+                        "OK",
                         emptyMap(),
                         ByteArrayInputStream(ByteArray(0)),
                     )
@@ -193,6 +215,8 @@ class WebViewCaptchaBrowser private constructor(
                     javaScriptEnabled = true
                     domStorageEnabled = true
                     mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                    javaScriptCanOpenWindowsAutomatically = false
+                    setSupportMultipleWindows(false)
                 }
                 WebViewCaptchaBrowser(webView).apply { setup() }
             }

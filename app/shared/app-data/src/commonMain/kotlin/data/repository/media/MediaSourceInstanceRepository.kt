@@ -83,7 +83,7 @@ data class MediaSourceSaves(
             )
 
             val enabledBtSources: List<String> = emptyList()
-            val disabledBtSources: List<String> = listOf(MikanCNMediaSource.ID, "dmhy")
+            val disabledBtSources: List<String> = emptyList()
 
             fun createNyaaSave(): MediaSourceSave {
                 val args = RssMediaSourceArguments(
@@ -162,6 +162,11 @@ data class MediaSourceSaves(
                         ),
                         filterByEpisodeSort = false,
                         filterBySubjectName = false,
+                        matchVideo = SelectorSearchConfig.MatchVideoConfig(
+                            enableNestedUrl = true,
+                            matchNestedUrl = """(?i)(?:embed|player|video|stream|fembed|filemoon|streamwish|mixdrop|dood|netu|voe|waaw|streamsito|hls)""",
+                            matchVideoUrl = """(?i)(?:^https?:\/\/(?!.*https?:\/\/).+(?:\.mp4|\.mkv|\.m3u8)(?:\?.+)?)|(?:.*(?:m3u8|hls|playlist\.m3u8).*)""",
+                        ),
                     ),
                     tier = MediaSourceTier(2u),
                 )

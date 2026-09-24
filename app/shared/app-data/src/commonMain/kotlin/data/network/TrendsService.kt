@@ -13,6 +13,9 @@ import androidx.paging.Pager
 import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.trending.TrendingSubjectInfo
@@ -104,7 +107,21 @@ class TrendsRepository(
                     name = name,
                 )
             }
-            if (subjects.isEmpty()) null else TrendsInfo(subjects)
+            if (subjects.isEmpty()) return null
+            val resolvedSubjects = coroutineScope {
+                subjects.map { item ->
+                    async {
+                        val readable = me.him188.ani.app.domain.subject.SubjectTitleResolver.resolveReadableTitle(
+                            item.bangumiId,
+                            item.name,
+                            item.nameCn,
+                            httpClient,
+                        )
+                        item.copy(name = readable)
+                    }
+                }.awaitAll()
+            }
+            TrendsInfo(resolvedSubjects)
         } catch (e: Exception) {
             null
         }

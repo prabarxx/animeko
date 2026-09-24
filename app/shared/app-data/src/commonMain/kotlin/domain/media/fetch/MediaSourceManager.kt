@@ -237,9 +237,9 @@ class MediaSourceManagerImpl(
         },
     )
     private val factories: List<MediaSourceFactory> = buildSet {
-        addAll(ServiceLoader.loadServices(MediaSourceFactory::class))
-        add(MikanMediaSource.Factory()) // Kotlin bug, MPP 加载不了 resources
-        add(MikanCNMediaSource.Factory())
+        addAll(ServiceLoader.loadServices(MediaSourceFactory::class).filterNot {
+            it.factoryId.value in setOf("mikan", "mikancn", "dmhy")
+        })
         add(RssMediaSource.Factory())
         add(JellyfinMediaSource.Factory())
         add(EmbyMediaSource.Factory())

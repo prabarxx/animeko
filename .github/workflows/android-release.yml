@@ -11,7 +11,7 @@ on:
       tag_name:
         description: 'Nombre del tag o versión de release (ej. v6.2.2-es)'
         required: false
-        default: 'v6.2.4-es'
+        default: 'v6.2.5-es'
 
 permissions:
   contents: write
@@ -88,7 +88,7 @@ jobs:
           mkdir -p output_apks
           APK_ARM64=$(find app/android/build/outputs/apk/default/release -name "*arm64-v8a-release.apk" | head -n 1)
           if [ -n "$APK_ARM64" ] && [ -f "$APK_ARM64" ]; then
-            cp "$APK_ARM64" output_apks/animeko-v6.2.4-redmi-note-13-arm64-v8a.apk
+            cp "$APK_ARM64" output_apks/animeko-v6.2.5-redmi-note-13-arm64-v8a.apk
             cp "$APK_ARM64" output_apks/animeko-redmi-note-13-arm64-v8a.apk
           fi
           
@@ -115,30 +115,32 @@ jobs:
           elif [ -n "${{ inputs.tag_name }}" ]; then
             echo "val=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
           else
-            echo "val=v6.2.4-es" >> "$GITHUB_OUTPUT"
+            echo "val=v6.2.5-es" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.val }}
-          name: Animeko v6.2.4 para Redmi Note 13 (${{ steps.tag.outputs.val }})
+          name: Animeko v6.2.5 para Redmi Note 13 (${{ steps.tag.outputs.val }})
           body: |
-            ## Animeko v6.2.4 (Redmi Note 13 / arm64-v8a)
+            ## Animeko v6.2.5 (Redmi Note 13 / arm64-v8a)
             
-            Versión con corrección de episodios individuales de torrents (permite cargar cualquier capítulo como el 2 de Erai-raws en animes finalizados) y selección automática de subtítulos en Español Latino.
+            Solución definitiva al bloqueo de reproducción de torrents ("DecodingData" / pantalla de carga infinita) en Android.
             
             ### Archivos incluidos:
-            - **`animeko-v6.2.4-redmi-note-13-arm64-v8a.apk`**: APK optimizado nativo para Redmi Note 13 (arm64-v8a).
+            - **`animeko-v6.2.5-redmi-note-13-arm64-v8a.apk`**: APK optimizado nativo para Redmi Note 13 (arm64-v8a).
             - **`animeko-redmi-note-13-arm64-v8a.apk`**: Enlace estándar para compatibilidad.
             - **`animeko-universal-release.apk`**: APK universal.
             
-            ### Novedades y correcciones (v6.2.4):
-            - **Solución a la desaparición de episodios individuales de Erai-raws**: Se corrigió la regla interna `hideSingleEpisodeForCompleted` que excluía los torrents de episodios individuales (ej. capítulo 2) en series finalizadas. Ahora los episodios individuales siempre están visibles y se cargan al instante.
-            - **Extracción limpia del nombre de la serie**: El motor de torrents ahora extrae de forma limpia el nombre base de la serie (`Jujutsu Kaisen`) desde los títulos de Erai-raws para asociar con 100% de precisión los episodios al anime correspondiente.
-            - **Subtítulos en Español Latino automáticos**: El reproductor ahora prioriza automáticamente las pistas de subtítulos en Español Latino (`es-419`, `Español (Latinoamérica)`, `Latino`) nada más comenzar la reproducción en archivos con subtítulos múltiples.
-            - **Selección exacta de episodios vs películas**: Se prioriza siempre el capítulo exacto sobre películas o especiales recientes.
-            - **Compatibilidad de códec y velocidad en tiempo real**: Reproducción optimizada en ExoPlayer con fallback de códecs y velocidad de descarga en vivo en español.
+            ### Correcciones críticas de reproducción de torrents (v6.2.5):
+            - **Eliminación del bucle infinito de espera de archivos**: Se resolvió el bloqueo en `resolveDownloadingFile()` que esperaba indefinidamente a que el archivo tuviera tamaño > 0 antes de iniciar el streaming, impidiendo la creación del buffer de lectura y la petición de piezas.
+            - **Corrección de deadlines en libtorrent**: Se cambiaron los deadlines negativos (-5000ms/-10000ms que libtorrent descartaba por considerarlos en el pasado) a milisegundos positivos desde el momento actual (500ms para piezas iniciales y 5000ms para el cuerpo), restaurando la descarga prioritaria de las primeras piezas.
+            - **Sincronización de memoria compartida IPC**: Se sincronizó el estado de las piezas en el búfer de memoria compartida antes de notificar por IPC al cliente, evitando bloqueos por desincronización entre procesos.
+            - **Manejo de reanudación y carreras en `PieceList` y `RemotePieceList`**: Se añadieron comprobaciones seguras contra excepciones por doble reanudación (`Already resumed`) y reintentos para lectura de estado listo.
+            - **Corrección de límite de subida en redes móviles**: Se eliminó la restricción agresiva de subida a 1 KB/s que provocaba que los peers de BitTorrent desconectaran la transferencia (choking).
+            - **Timeout de 60 segundos en resolución de archivos**: Previene bloqueos eternos si un torrent no responde o los metadatos tardan demasiado.
+            - **Priorización de trackers activos y nivelación de tiers**: Se priorizaron trackers ultrarrápidos (OpenTrackr, Nyaa, Stealth, Torrent.eu.org) en el nivel secundario sin interferir con los primarios.
           draft: false
           prerelease: false
           files: |

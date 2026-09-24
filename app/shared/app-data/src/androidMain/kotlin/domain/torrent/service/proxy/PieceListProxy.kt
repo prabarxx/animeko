@@ -98,7 +98,12 @@ class PieceListProxy(
 
         val subscription = with(delegate) {
             (this as PieceSubscribable)
-                .subscribePieceState(getByPieceIndex(pieceIndex)) { _, _ ->
+                .subscribePieceState(getByPieceIndex(pieceIndex)) { piece, state ->
+                    with(delegate) {
+                        if (containsAbsolutePieceIndex(piece.pieceIndex)) {
+                            pieceStatesRwBuf.put(piece.indexInList, state.ordinal.toByte())
+                        }
+                    }
                     try {
                         observer.onUpdate()
                     } catch (doe: DeadObjectException) {

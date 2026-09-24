@@ -29,9 +29,13 @@ import me.him188.ani.app.torrent.api.pieces.Piece
 import me.him188.ani.app.torrent.api.pieces.PieceList
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.absolutePath
+import me.him188.ani.utils.io.createDirectories
+import me.him188.ani.utils.io.exists
+import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.io.isRegularFile
 import me.him188.ani.utils.io.length
 import me.him188.ani.utils.io.resolve
+import me.him188.ani.utils.io.writeBytes
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.thisLogger
 import org.openani.mediamp.io.SeekableInput
@@ -260,21 +264,14 @@ abstract class AbstractTorrentFileEntry(
 
     override suspend fun resolveFile(): SystemPath = resolveDownloadingFile()
 
-    protected suspend fun resolveDownloadingFile(): SystemPath {
-        while (true) {
-            val file = withContext(Dispatchers.IO) { resolveFileMaybeEmptyOrNull() }
-            if (file != null) {
-                if (withContext(Dispatchers.IO) { file.length() == 0L }) {
-                    logger.info { "[$torrentId][resolveDownloadingFile]: Got file, but it's length is zero. Waiting..." }
-                    delay(1.seconds)
-                    continue
-                }
-                logger.info { "[$torrentId][resolveDownloadingFile]: Get file: ${file.absolutePath}" }
-                return file
-            }
-            logger.info { "[$torrentId][resolveDownloadingFile]: Still waiting to get file... saveDirectory: $saveDirectory" }
-            delay(1.seconds)
+    protected suspend fun resolveDownloadingFile(): SystemPath = withContext(Dispatchers.IO) {
+        val file = saveDirectory.resolve(relativePath)
+        file.path.parent?.inSystem?.createDirectories()
+        if (!file.exists()) {
+            runCatching { file.writeBytes(byteArrayOf()) }
         }
+        logger.info { "[$torrentId][resolveDownloadingFile]: Prepared file for streaming: ${file.absolutePath}" }
+        file
     }
 
     @Throws(IOException::class)

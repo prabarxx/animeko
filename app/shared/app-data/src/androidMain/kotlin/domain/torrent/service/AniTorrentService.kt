@@ -101,7 +101,11 @@ sealed class AniTorrentService : LifecycleService() {
             anitorrent.complete(
                 AnitorrentEngine(
                     anitorrentConfig.combine(meteredNetworkDetector.isMeteredNetworkFlow) { config, isMetered ->
-                        if (isMetered) config.copy(uploadRateLimit = 1.kiloBytes) else config
+                        if (isMetered && config.limitUploadOnMeteredNetwork) {
+                            config.copy(uploadRateLimit = 100.kiloBytes)
+                        } else {
+                            config
+                        }
                     },
                     httpClient,
                     torrentPeerConfig,

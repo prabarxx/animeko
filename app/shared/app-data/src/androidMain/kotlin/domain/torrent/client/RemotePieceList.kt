@@ -72,11 +72,17 @@ class RemotePieceList(
 
         var disposableHandle: IDisposableHandle? = null
         var transform: ConnectivityAware.StateTransform? = null
-        val readyState = try {
+        try {
             suspendCancellableCoroutine { cont ->
                 logger.info { "Awaiting state remote piece $pieceIndex to ${PieceState.FINISHED}." }
                 transform = registerState(false) {
-                    cont.resumeWithException(CancellationException("Remote disconnected"))
+                    if (cont.isActive) {
+                        cont.resumeWithException(CancellationException("Remote disconnected"))
+                    }
+                }
+                if (state == PieceState.FINISHED) {
+                    if (cont.isActive) cont.resume(PieceState.FINISHED)
+                    return@suspendCancellableCoroutine
                 }
                 // remote 必须保证 register observer 调用后一定可以监听到新的 state
                 disposableHandle = try {
@@ -84,21 +90,37 @@ class RemotePieceList(
                         pieceIndex,
                         object : IPieceStateObserver.Stub() {
                             override fun onUpdate() {
-                                val newState = state
+                                var newState = state
                                 if (newState == PieceState.FINISHED) {
-                                    cont.resume(newState)
+                                    if (cont.isActive) cont.resume(newState)
+                                    return
+                                }
+                                for (attempt in 1..10) {
+                                    try {
+                                        Thread.sleep(10)
+                                    } catch (_: InterruptedException) {
+                                        break
+                                    }
+                                    newState = state
+                                    if (newState == PieceState.FINISHED) {
+                                        if (cont.isActive) cont.resume(newState)
+                                        return
+                                    }
                                 }
                             }
                         },
                     )
                 } catch (_: DeadObjectException) {
                     logger.warn { "Remote interface $remote is dead, awaitFinished returns PieceState.NOT_AVAILABLE" }
-                    cont.resume(PieceState.NOT_AVAILABLE)
-
+                    if (cont.isActive) {
+                        cont.resume(PieceState.NOT_AVAILABLE)
+                    }
                     return@suspendCancellableCoroutine
                 }
                 // 注册 listener 之后如果 state 是 ready 了，下面就监听不到 ready state 了
-                if (state == PieceState.FINISHED) cont.resume(state)
+                if (state == PieceState.FINISHED) {
+                    if (cont.isActive) cont.resume(PieceState.FINISHED)
+                }
             }
         } finally {
             logger.info { "Got state of remote piece $pieceIndex: $state." }
@@ -108,8 +130,6 @@ class RemotePieceList(
             }
             transform?.let(::unregister)
         }
-
-        check(state == readyState) { "Remote state of piece $this is changed from $readyState to $state" }
     }
     
     companion object {

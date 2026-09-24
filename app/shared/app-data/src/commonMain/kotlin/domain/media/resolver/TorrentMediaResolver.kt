@@ -15,7 +15,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
+import kotlin.time.Duration.Companion.seconds
 import me.him188.ani.app.domain.media.cache.engine.EnsureTorrentEngineIsAccessible
 import me.him188.ani.app.domain.media.cache.engine.TorrentEngineAccess
 import me.him188.ani.app.domain.media.cache.engine.UnsafeTorrentEngineAccessApi
@@ -224,8 +226,10 @@ class TorrentMediaDataProvider(
                 logger.info {
                     "TorrentVideoSource '${episodeMetadata.title}' waiting for files"
                 }
-                val files = downloader.startDownload(encodedTorrentInfo)
-                    .getFiles()
+                val files = withTimeoutOrNull(60.seconds) {
+                    downloader.startDownload(encodedTorrentInfo)
+                        .getFiles()
+                } ?: throw MediaResolutionException(ResolutionFailures.FETCH_TIMEOUT)
 
                 TorrentMediaResolver.selectVideoFileEntry(
                     files,

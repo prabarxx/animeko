@@ -342,10 +342,14 @@ abstract class AnitorrentTorrentDownloader<THandle : TorrentHandle, TAddInfo : T
             parentCoroutineContext = parentCoroutineContext,
         ).also {
             openSessions.value += data.data.contentHashCode().toString() to it // 放进去之后才能处理 alert
-            val trackers = (builtinTrackers + extraTrackers).distinct()
-            logger.info { "[${it.handleId}] AnitorrentDownloadSession created, adding ${trackers.size} trackers (${extraTrackers.size} extra)" }
-            for (tracker in trackers) {
+            val distinctExtra = extraTrackers.distinct()
+            val distinctBuiltin = builtinTrackers.distinct()
+            logger.info { "[${it.handleId}] AnitorrentDownloadSession created, adding ${distinctBuiltin.size} builtin trackers and ${distinctExtra.size} extra trackers" }
+            for (tracker in distinctExtra) {
                 handle.addTracker(tracker, 0, 0)
+            }
+            for (tracker in distinctBuiltin) {
+                handle.addTracker(tracker, 1, 0)
             }
             native.resume()
         }
@@ -385,6 +389,11 @@ typealias HandleId = Long
 
 private val builtinTrackers by lazy {
     """
+udp://tracker.opentrackr.org:1337/announce
+http://nyaa.tracker.wf:7777/announce
+udp://open.stealth.si:80/announce
+udp://exodus.desync.com:6969/announce
+udp://tracker.torrent.eu.org:451/announce
 http://1337.abcvg.info:80/announce
 http://bt1.archive.org:6969/announce
 http://bt2.archive.org:6969/announce

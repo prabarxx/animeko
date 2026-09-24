@@ -559,8 +559,8 @@ class AnitorrentDownloadSession(
 
     private fun createPiecePriorities(): PiecePriorities {
         return object : PiecePriorities {
-            private val baseDeadline = -5000
-            private val highestDeadline = -10000
+            private val baseDeadline = 5000
+            private val highestDeadline = 500
 
             override fun downloadOnly(highPriorityPieces: List<Int>, normalPriorityPieces: List<Int>) {
                 if (highPriorityPieces.isEmpty() && normalPriorityPieces.isEmpty()) {
@@ -577,10 +577,10 @@ class AnitorrentDownloadSession(
                     // highPriorityPieces 的 deadline < 5000, normalPriorityPieces 的 deadline > 5000
 
                     // 让 high priority 的 piece 均匀分布在 highestDeadline 到 baseDeadline 之间, 
-                    // 第一个 piece 的 deadline 一定是 highestDeadline
-                    val highPriorityStep = (baseDeadline - highestDeadline) / highPriorityPieces.size
-                    highPriorityPieces.asReversed().forEachIndexed { index, pieceIndex ->
-                        handle.setPieceDeadline(pieceIndex, baseDeadline - (index + 1) * highPriorityStep)
+                    // 第一个 piece 的 deadline 一定是 highestDeadline (500ms)
+                    val highPriorityStep = (baseDeadline - highestDeadline) / highPriorityPieces.size.coerceAtLeast(1)
+                    highPriorityPieces.forEachIndexed { index, pieceIndex ->
+                        handle.setPieceDeadline(pieceIndex, highestDeadline + index * highPriorityStep)
                     }
 
                     // 让 normal priority 的 piece 根据等差数列分布到 baseDeadline 到 IntMax
@@ -589,9 +589,9 @@ class AnitorrentDownloadSession(
                     }
                 } else {
                     // 既然 highPriorityPieces 已经全部下载完了, 那我们的 normal priority 也可以成为 high priority
-                    val highPriorityStep = (baseDeadline - highestDeadline) / normalPriorityPieces.size
-                    normalPriorityPieces.asReversed().forEachIndexed { index, pieceIndex ->
-                        handle.setPieceDeadline(pieceIndex, baseDeadline - (index + 1) * highPriorityStep)
+                    val highPriorityStep = (baseDeadline - highestDeadline) / normalPriorityPieces.size.coerceAtLeast(1)
+                    normalPriorityPieces.forEachIndexed { index, pieceIndex ->
+                        handle.setPieceDeadline(pieceIndex, highestDeadline + index * highPriorityStep)
                     }
                 }
             }

@@ -245,17 +245,28 @@ class DefaultPieceList(
     }
 
     override suspend fun Piece.awaitFinished() {
+        if (state == PieceState.FINISHED) return
         val piece = this
         suspendCancellableCoroutine { cont ->
+            if (piece.state == PieceState.FINISHED) {
+                if (cont.isActive) cont.resumeWith(Result.success(Unit))
+                return@suspendCancellableCoroutine
+            }
             val subscriptions = subscriptions
-            val sub = subscriptions.subscribe(piece.pieceIndex) { subscription, piece ->
-                if (piece.state == PieceState.FINISHED) {
-                    cont.resumeWith(Result.success(Unit))
+            val sub = subscriptions.subscribe(piece.pieceIndex) { subscription, p ->
+                if (p.state == PieceState.FINISHED) {
                     subscriptions.unsubscribe(subscription)
+                    if (cont.isActive) {
+                        cont.resumeWith(Result.success(Unit))
+                    }
                 }
             }
             cont.invokeOnCancellation {
                 subscriptions.unsubscribe(sub)
+            }
+            if (piece.state == PieceState.FINISHED) {
+                subscriptions.unsubscribe(sub)
+                if (cont.isActive) cont.resumeWith(Result.success(Unit))
             }
         }
     }

@@ -17,6 +17,7 @@
 }
 -keepclassmembers class androidx.media3.exoplayer.mediacodec.MediaCodecRenderer {
     androidx.media3.exoplayer.mediacodec.MediaCodecInfo codecInfo;
+    private boolean enableDecoderFallback;
 }
 
 # Torrent4j

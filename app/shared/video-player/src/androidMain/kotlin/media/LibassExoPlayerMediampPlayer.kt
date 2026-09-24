@@ -20,6 +20,7 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.TransferListener
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.mediacodec.MediaCodecRenderer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.extractor.DefaultExtractorsFactory
@@ -105,6 +106,30 @@ class LibassExoPlayerMediampPlayer private constructor(
 
     init {
         assHandler.init(exoPlayer)
+        runCatching {
+            for (i in 0 until exoPlayer.rendererCount) {
+                val renderer = exoPlayer.getRenderer(i)
+                if (renderer is MediaCodecRenderer) {
+                    var cls: Class<*>? = renderer.javaClass
+                    while (cls != null && cls != Any::class.java) {
+                        try {
+                            val field = cls.getDeclaredField("enableDecoderFallback")
+                            field.isAccessible = true
+                            field.setBoolean(renderer, true)
+                            break
+                        } catch (_: NoSuchFieldException) {
+                            cls = cls.superclass
+                        }
+                    }
+                }
+            }
+        }
+        runCatching {
+            val params = exoPlayer.trackSelectionParameters.buildUpon()
+                .setExceedRendererCapabilitiesIfNecessary(true)
+                .build()
+            exoPlayer.trackSelectionParameters = params
+        }
         backgroundScope.launch(Dispatchers.Main.immediate) {
             while (isActive) {
                 // AssRenderer normally supplies this timestamp. MediaMP owns the ExoPlayer

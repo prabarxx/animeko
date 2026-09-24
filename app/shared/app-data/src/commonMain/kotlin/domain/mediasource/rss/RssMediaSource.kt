@@ -167,11 +167,52 @@ class RssMediaSource(
     }
 
     override suspend fun fetch(query: MediaFetchRequest): SizedSource<MediaMatch> {
-        return query.subjectNames
-            .map { name ->
+        val epStrings = buildSet {
+            val ep1 = query.episodeSort.toString().trim()
+            if (ep1.isNotBlank()) add(ep1)
+            val ep2 = query.episodeEp?.toString()?.trim()
+            if (!ep2.isNullOrBlank()) add(ep2)
+        }
+
+        val keywords = buildSet {
+            // 1. Erai-raws prioritized for Latin/English titles to guarantee finding specific episodes
+            if (epStrings.isNotEmpty()) {
+                for (name in query.subjectNames) {
+                    val trimmed = name.trim()
+                    if (trimmed.any { it in 'a'..'z' || it in 'A'..'Z' }) {
+                        for (ep in epStrings) {
+                            add("[Erai-raws] $trimmed $ep")
+                        }
+                    }
+                }
+            }
+
+            // 2. Exact episode search for all subject names
+            if (epStrings.isNotEmpty()) {
+                for (name in query.subjectNames) {
+                    val trimmed = name.trim()
+                    if (trimmed.isNotBlank()) {
+                        for (ep in epStrings) {
+                            add("$trimmed $ep")
+                        }
+                    }
+                }
+            }
+
+            // 3. General title search (always if no episode, or as fallback)
+            for (name in query.subjectNames) {
+                val trimmed = name.trim()
+                if (trimmed.isNotBlank()) {
+                    add(trimmed)
+                }
+            }
+        }
+
+        return keywords
+            .map { keyword ->
                 startSearch(
                     RssSearchQuery(
-                        subjectName = name,
+                        subjectName = keyword,
                         episodeSort = query.episodeSort,
                         allSubjectNames = query.subjectNames,
                         episodeEp = query.episodeEp,
@@ -195,6 +236,6 @@ data class RssSearchQuery(
 fun RssSearchQuery.toFilterContext() = MediaListFilterContext(
     subjectNames = allSubjectNames.toSet(),
     episodeSort = episodeSort,
-    episodeEp = episodeSort,
+    episodeEp = episodeEp ?: episodeSort,
     episodeName = episodeName,
 )

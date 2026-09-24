@@ -131,18 +131,36 @@ fun EpisodeVideoLoadingIndicator(
                 }
 
                 VideoLoadingState.ResolvingSource -> {
+                    val speed by remember { derivedStateOf(speedProvider) }
                     TextWithBorder(
-                        resolvingSourceText,
+                        buildString {
+                            append(resolvingSourceText)
+                            if (speed != FileSize.Unspecified && speed != FileSize.Zero) {
+                                appendLine()
+                                append(speed.toString())
+                                append("/s")
+                            }
+                        },
                         textAlign = TextAlign.Center,
                     )
                 }
 
                 is VideoLoadingState.DecodingData -> {
+                    val speed by remember { derivedStateOf(speedProvider) }
                     TextWithBorder(
-                        if (!state.isBt) {
-                            decodingDataText
-                        } else {
-                            decodingBtText
+                        buildString {
+                            append(
+                                if (!state.isBt) {
+                                    decodingDataText
+                                } else {
+                                    decodingBtText
+                                },
+                            )
+                            if (speed != FileSize.Unspecified && speed != FileSize.Zero) {
+                                appendLine()
+                                append(speed.toString())
+                                append("/s")
+                            }
                         },
                         textAlign = TextAlign.Center,
                     )

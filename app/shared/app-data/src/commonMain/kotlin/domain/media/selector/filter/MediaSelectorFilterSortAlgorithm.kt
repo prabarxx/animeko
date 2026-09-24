@@ -319,6 +319,19 @@ class MediaSelectorFilterSortAlgorithm {
                     tiers?.get(maybe.original.mediaSourceId, maybe.original.properties.alliance)
                         ?: MediaSourceTier.MaximumValue // 还没加载出来, 先不排序
                 }
+                // Prefer AVC / standard H.264 formats over HEVC / AV1 for hardware compatibility
+                .thenBy { maybe ->
+                    val title = maybe.original.originalTitle
+                    if (title.contains("HEVC", ignoreCase = true) ||
+                        title.contains("x265", ignoreCase = true) ||
+                        title.contains("H.265", ignoreCase = true) ||
+                        title.contains("AV1", ignoreCase = true)
+                    ) {
+                        1
+                    } else {
+                        0
+                    }
+                }
                 .thenByDescending {
                     it.original.publishedTime
                 }

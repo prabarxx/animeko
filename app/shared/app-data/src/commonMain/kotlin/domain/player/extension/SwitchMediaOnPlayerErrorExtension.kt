@@ -122,7 +122,8 @@ class SwitchMediaOnPlayerErrorExtension(
                 videoLoadingStateFlow, // 解析链接出错 (未匹配到链接)
                 playerStateFlow, // 解析成功, 但播放器出错 (无法链接到链接, 例如链接错误)
             ) { videoLoadingState, playerState ->
-                videoLoadingState is VideoLoadingState.Failed || playerState.mediaStatus is MediaStatus.Error
+                (videoLoadingState is VideoLoadingState.Failed && videoLoadingState !is VideoLoadingState.Cancelled) ||
+                        playerState.mediaStatus is MediaStatus.Error
             }.distinctUntilChanged()
                 .collectLatest { isError ->
                     if (isError) {

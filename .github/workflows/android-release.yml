@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Nombre del tag o versión de release (ej. v6.2.1-es)'
+        description: 'Nombre del tag o versión de release (ej. v6.2.2-es)'
         required: false
-        default: 'v6.2.1-es'
+        default: 'v6.2.2-es'
 
 permissions:
   contents: write
@@ -88,7 +88,7 @@ jobs:
           mkdir -p output_apks
           APK_ARM64=$(find app/android/build/outputs/apk/default/release -name "*arm64-v8a-release.apk" | head -n 1)
           if [ -n "$APK_ARM64" ] && [ -f "$APK_ARM64" ]; then
-            cp "$APK_ARM64" output_apks/animeko-v6.2.1-redmi-note-13-arm64-v8a.apk
+            cp "$APK_ARM64" output_apks/animeko-v6.2.2-redmi-note-13-arm64-v8a.apk
             cp "$APK_ARM64" output_apks/animeko-redmi-note-13-arm64-v8a.apk
           fi
           
@@ -115,30 +115,29 @@ jobs:
           elif [ -n "${{ inputs.tag_name }}" ]; then
             echo "val=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
           else
-            echo "val=v6.2.1-es" >> "$GITHUB_OUTPUT"
+            echo "val=v6.2.2-es" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.val }}
-          name: Animeko v6.2.1 para Redmi Note 13 (${{ steps.tag.outputs.val }})
+          name: Animeko v6.2.2 para Redmi Note 13 (${{ steps.tag.outputs.val }})
           body: |
-            ## Animeko v6.2.1 (Redmi Note 13 / arm64-v8a)
+            ## Animeko v6.2.2 (Redmi Note 13 / arm64-v8a)
             
-            Versión con buscador corregido para Romaji/Occidental, inicio sin caracteres chinos y prioridad para Erai-raws con subtítulos en español.
+            Versión con reproducción torrent optimizada, soporte de decodificación de video, búsqueda exacta de episodios para Erai-raws y velocidad de descarga en tiempo real.
             
             ### Archivos incluidos:
-            - **`animeko-v6.2.1-redmi-note-13-arm64-v8a.apk`**: APK optimizado nativo para Redmi Note 13 (arm64-v8a).
+            - **`animeko-v6.2.2-redmi-note-13-arm64-v8a.apk`**: APK optimizado nativo para Redmi Note 13 (arm64-v8a).
             - **`animeko-redmi-note-13-arm64-v8a.apk`**: Enlace estándar para compatibilidad.
             - **`animeko-universal-release.apk`**: APK universal.
             
-            ### Novedades y correcciones (v6.2.1):
-            - **Buscador 100% funcional**: Búsqueda integrada con fallback a Bangumi v0 Search API. Permite buscar animes escribiendo directamente en alfabeto latino/Romaji (*Jujutsu Kaisen*, *Kimetsu no Yaiba*, *Chainsaw Man*, *Solo Leveling*, etc.).
-            - **Inicio y tendencias en Romaji**: Carrusel de tendencias y recomendaciones de la pantalla de inicio ahora muestran los nombres originales / Romaji en lugar de caracteres chinos (*nameCn*).
-            - **Prioridad Erai-raws por defecto**: Selección automática prioritaria de torrents de `[Erai-raws]` (con subtítulos Multi-Sub / Español Latino). Si no está disponible, pasa automáticamente a otros grupos (*SubsPlease*, *Judas*, etc.) o cualquier fuente disponible.
-            - **Traducción al español del 100% de la interfaz**: Todas las pantallas, configuraciones y botones traducidos.
-            - **Fuentes sin bloqueo agregadas**: **Nyaa (Sub Español / Multi / Eng)** y **AnimeTosho** activadas por defecto.
+            ### Novedades y correcciones (v6.2.2):
+            - **Reproducción torrent optimizada y solución de error de decodificación**: Activado fallback automático de códecs de video en ExoPlayer para evitar bloqueos por limitaciones de decodificador de hardware (`Format exceeds selected codec's capabilities`). Se priorizan versiones compatibles AVC/H.264 sobre HEVC sin perder calidad.
+            - **Búsqueda precisa de episodios en Nyaa y AnimeTosho**: Búsqueda por número de episodio exacto y grupo `[Erai-raws]` para saltarse el límite de 75 items recientes de RSS de Nyaa, permitiendo cargar episodios de cualquier año (como Jujutsu Kaisen T1 Ep 1 de 2020).
+            - **Indicador de descarga en tiempo real en español**: La pantalla de carga ahora muestra la velocidad de descarga en vivo en KB/s o MB/s durante la conexión de pares y descarga de bloques iniciales del torrent, completamente en español.
+            - **Corrección de desaparición de fuentes**: Salir o cancelar la carga ya no agrega el torrent a la lista negra ni oculta Erai-raws de las opciones.
           draft: false
           prerelease: false
           files: |

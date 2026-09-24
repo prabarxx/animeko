@@ -2826,6 +2826,24 @@
 
     <string name="watch_together_got_it">Got it</string>
 
+    <!-- Episode Video Loading -->
+    <string name="subject_episode_video_loading_player_error">Error de reproducción. Por favor cambia de fuente</string>
+    <string name="subject_episode_video_loading_auto_selecting">Seleccionando automáticamente un recurso. Por favor espera</string>
+    <string name="subject_episode_video_loading_resolving_source">Resolviendo enlace del recurso\nNormalmente tarda unos segundos. Si no, prueba a cambiar de recurso</string>
+    <string name="subject_episode_video_loading_decoding_data">Recurso resuelto. Preparando video</string>
+    <string name="subject_episode_video_loading_decoding_bt">Conectando con pares y descargando bloques iniciales...\n(Suele tardar entre 15 y 30 segundos. Si no hay velocidad, cambia de fuente o usa caché)</string>
+    <string name="subject_episode_video_loading_buffering">Almacenando en búfer</string>
+    <string name="subject_episode_video_loading_buffering_bt_too_long">El búfer inicial de BitTorrent suele tardar un momento. Por favor espera unos 30 segundos</string>
+    <string name="subject_episode_video_loading_buffering_bt_no_speed_try_switch">Si la velocidad sigue en cero, prueba cambiando de fuente</string>
+    <string name="subject_episode_video_loading_buffering_too_long">El almacenamiento en búfer está tardando demasiado. Prueba a cambiar de fuente</string>
+    <string name="subject_episode_video_loading_failed_prefix">Error al cargar: </string>
+    <string name="subject_episode_video_loading_cause_resolution_timed_out">Tiempo de espera agotado al resolver</string>
+    <string name="subject_episode_video_loading_cause_unknown_error">Error desconocido</string>
+    <string name="subject_episode_video_loading_cause_unsupported_media">Formato de archivo no compatible</string>
+    <string name="subject_episode_video_loading_cause_no_matching_file">No se encontró ningún archivo reproducible</string>
+    <string name="subject_episode_video_loading_cause_cancelled">Cancelado</string>
+    <string name="subject_episode_video_loading_cause_network_error">Error de red</string>
+
 </resources>
 
 <!--@formatter:on-->

@@ -19,10 +19,13 @@ import me.him188.ani.utils.platform.Uuid
 class MediaSourceSubscriptionRepository(
     private val dataStore: DataStore<MediaSourceSubscriptionsSaveData>,
 ) : Repository() {
-    val flow get() = dataStore.data.map { it.list }
+    val flow get() = dataStore.data.map { data ->
+        data.list.filterNot { isInvalidSubscriptionUrl(it.url) }
+    }
 
     suspend fun add(subscription: MediaSourceSubscription) {
-        dataStore.updateData { it.copy(list = it.list + subscription) }
+        if (isInvalidSubscriptionUrl(subscription.url)) return
+        dataStore.updateData { it.copy(list = it.list.filterNot { s -> isInvalidSubscriptionUrl(s.url) } + subscription) }
     }
 
     /**
@@ -32,7 +35,7 @@ class MediaSourceSubscriptionRepository(
         dataStore.updateData {
             it.copy(
                 list = it.list.filterNotTo(ArrayList(it.list.size)) {
-                    it.subscriptionId == subscription.subscriptionId
+                    it.subscriptionId == subscription.subscriptionId || isInvalidSubscriptionUrl(it.url)
                 },
             )
         }
@@ -48,10 +51,13 @@ class MediaSourceSubscriptionRepository(
         var found = false
         dataStore.updateData { data ->
             data.copy(
-                list = data.list.map { subscription ->
-                    if (subscription.subscriptionId == id) {
+                list = data.list.mapNotNull { subscription ->
+                    if (isInvalidSubscriptionUrl(subscription.url)) {
+                        null
+                    } else if (subscription.subscriptionId == id) {
                         found = true
-                        update(subscription)
+                        val updated = update(subscription)
+                        if (isInvalidSubscriptionUrl(updated.url)) null else updated
                     } else {
                         subscription
                     }
@@ -59,6 +65,13 @@ class MediaSourceSubscriptionRepository(
             )
         }
         return found
+    }
+
+    companion object {
+        fun isInvalidSubscriptionUrl(url: String): Boolean {
+            val trimmed = url.trim().lowercase()
+            return trimmed.endsWith(".json") || trimmed.contains("creamycake.org")
+        }
     }
 }
 
@@ -78,16 +91,7 @@ data class MediaSourceSubscriptionsSaveData(
         private const val CURRENT_VERSION = 1
 
         val Default = MediaSourceSubscriptionsSaveData(
-            listOf(
-                MediaSourceSubscription(
-                    subscriptionId = Uuid.randomString(),
-                    url = "https://sub.creamycake.org/v1/bt1.json",
-                ),
-                MediaSourceSubscription(
-                    subscriptionId = Uuid.randomString(),
-                    url = "https://sub.creamycake.org/v1/css1.json",
-                ),
-            ),
+            emptyList(),
             version = CURRENT_VERSION,
         )
     }

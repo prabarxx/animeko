@@ -176,10 +176,10 @@ class AnitorrentDownloadSession(
             TorrentDownloadController(
                 pieces,
                 prioritizer,
-                // libtorrent 可能会平均地请求整个 window, 所以不能太大
-                windowSize = (8 * 1024 * 1024 / pieceSize).toInt().coerceIn(2, 64),
-                headerSize = 2 * 1024 * 1024,
-                footerSize = (0.5 * 1024 * 1024).toLong(),
+                // Ventana ampliada a 32MB (12..64 piezas) para saturar múltiples sembradores en paralelo
+                windowSize = (32 * 1024 * 1024 / pieceSize).toInt().coerceIn(12, 64),
+                headerSize = 4 * 1024 * 1024,
+                footerSize = 2 * 1024 * 1024,
                 possibleFooterSize = 8 * 1024 * 1024,
             )
         }
@@ -257,13 +257,17 @@ class AnitorrentDownloadSession(
 
         fun updatePieceDeadlinesForSeek(requested: Piece) {
             with(pieces) {
+                logger.info { "[TorrentDownloadControl] $torrentId: Requesting immediate deadline 0 for piece ${requested.pieceIndex}" }
+                // Deadline 0 indica a libtorrent urgencia inmediata (máxima prioridad)
+                handle.setPieceDeadline(requested.pieceIndex, 0)
+                // Asignar prioridades inmediatas a las siguientes piezas consecutivas para amortiguar la reproducción continua
+                val nextCount = minOf(8, endPieceIndex - requested.pieceIndex)
+                for (i in 1 until nextCount) {
+                    handle.setPieceDeadline(requested.pieceIndex + i, i * 200)
+                }
+
                 if (!controller.isDownloading(requested.pieceIndex)) {
-                    logger.info { "[TorrentDownloadControl] $torrentId: Resetting deadlines to download ${requested.pieceIndex}" }
-                    handle.clearPieceDeadlines()
-                    controller.seekTo(requested.pieceIndex) // will request further pieces
-                } else {
-                    logger.info { "[TorrentDownloadControl] $torrentId: Requested piece ${requested.pieceIndex} is already downloading" }
-                    return
+                    controller.seekTo(requested.pieceIndex)
                 }
             }
         }
@@ -559,9 +563,6 @@ class AnitorrentDownloadSession(
 
     private fun createPiecePriorities(): PiecePriorities {
         return object : PiecePriorities {
-            private val baseDeadline = 5000
-            private val highestDeadline = 500
-
             override fun downloadOnly(highPriorityPieces: List<Int>, normalPriorityPieces: List<Int>) {
                 if (highPriorityPieces.isEmpty() && normalPriorityPieces.isEmpty()) {
                     return
@@ -573,25 +574,22 @@ class AnitorrentDownloadSession(
                 }
 
                 if (highPriorityPieces.isNotEmpty()) {
-                    // 以 deadline = 5000 为分界点,  
-                    // highPriorityPieces 的 deadline < 5000, normalPriorityPieces 的 deadline > 5000
-
-                    // 让 high priority 的 piece 均匀分布在 highestDeadline 到 baseDeadline 之间, 
-                    // 第一个 piece 的 deadline 一定是 highestDeadline (500ms)
-                    val highPriorityStep = (baseDeadline - highestDeadline) / highPriorityPieces.size.coerceAtLeast(1)
+                    // Piezas de cabecera y cola (metadatos / cues): pieza 0 con urgencia inmediata (deadline 0)
                     highPriorityPieces.forEachIndexed { index, pieceIndex ->
-                        handle.setPieceDeadline(pieceIndex, highestDeadline + index * highPriorityStep)
+                        val deadline = if (index == 0) 0 else index * 150
+                        handle.setPieceDeadline(pieceIndex, deadline)
                     }
 
-                    // 让 normal priority 的 piece 根据等差数列分布到 baseDeadline 到 IntMax
+                    // Piezas normales consecutivas del reproductor con intervalos rápidos para saturar sembradores
+                    val startOffset = highPriorityPieces.size * 150
                     normalPriorityPieces.forEachIndexed { index, pieceIndex ->
-                        handle.setPieceDeadline(pieceIndex, baseDeadline + (index + 1) * 700)
+                        handle.setPieceDeadline(pieceIndex, startOffset + (index + 1) * 250)
                     }
                 } else {
-                    // 既然 highPriorityPieces 已经全部下载完了, 那我们的 normal priority 也可以成为 high priority
-                    val highPriorityStep = (baseDeadline - highestDeadline) / normalPriorityPieces.size.coerceAtLeast(1)
+                    // Metadatos ya completos, la primera pieza de reproducción es inmediata (0ms)
                     normalPriorityPieces.forEachIndexed { index, pieceIndex ->
-                        handle.setPieceDeadline(pieceIndex, highestDeadline + index * highPriorityStep)
+                        val deadline = if (index == 0) 0 else index * 200
+                        handle.setPieceDeadline(pieceIndex, deadline)
                     }
                 }
             }

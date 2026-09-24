@@ -53,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.ApiFailure
+import me.him188.ani.app.data.repository.media.MediaSourceSubscriptionRepository
 import me.him188.ani.app.domain.mediasource.subscription.MediaSourceSubscription
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.tools.formatDateTime
@@ -128,11 +129,15 @@ class MediaSourceSubscriptionGroupState(
     private val addTasker = MonoTasker(backgroundScope)
     val isAddInProgress get() = addTasker.isRunning
     fun addNew(string: String) {
+        val trimmed = string.trim()
+        if (MediaSourceSubscriptionRepository.isInvalidSubscriptionUrl(trimmed)) {
+            return
+        }
         addTasker.launch {
             onAdd(
                 MediaSourceSubscription(
                     subscriptionId = Uuid.randomString(),
-                    url = string,
+                    url = trimmed,
                 ),
             )
             updateAll()

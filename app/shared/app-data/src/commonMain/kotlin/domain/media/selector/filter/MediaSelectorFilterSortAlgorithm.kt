@@ -136,6 +136,27 @@ class MediaSelectorFilterSortAlgorithm {
             if (minSeeders > 0 && seeders != null && seeders < minSeeders) {
                 return exclude(MediaExclusionReason.InsufficientSeeders(seeders = seeders, minRequired = minSeeders))
             }
+
+            // Exclusivo para torrents: solo mostrar enlaces torrents con subtítulos en español o multilenguaje (con español latino)
+            if (!isSpanishOrMultiSub(media)) {
+                return exclude(MediaExclusionReason.MediaWithoutSubtitle)
+            }
+        }
+
+        // Filtro potente de temporadas:
+        // Evita que al reproducir episodios de temporada 1 (como Jujutsu Kaisen) se muestre la última temporada
+        val targetSeason = SeasonFilterHelper.detectTargetSeason(context)
+        val mediaSeason = SeasonFilterHelper.extractSeasonNumber(mediaSubjectNameOrOriginalTitle)
+            ?: SeasonFilterHelper.extractSeasonNumber(media.originalTitle)
+
+        if (targetSeason == 1) {
+            if (mediaSeason != null && mediaSeason > 1) {
+                return exclude(MediaExclusionReason.FromSeriesSeason)
+            }
+        } else {
+            if (mediaSeason != null && mediaSeason != targetSeason) {
+                return exclude(MediaExclusionReason.FromSeriesSeason)
+            }
         }
 
         val subtitleKind = media.properties.subtitleKind
@@ -331,21 +352,42 @@ class MediaSelectorFilterSortAlgorithm {
                     tiers?.get(maybe.original.mediaSourceId, maybe.original.properties.alliance)
                         ?: MediaSourceTier.MaximumValue // 还没加载出来, 先不排序
                 }
-                // 1. Exact title match over fuzzy/movies/spin-offs
+                // 1. Prioridad estricta de coincidencia de temporada (evita que secuelas o temporadas recientes eclipsen la temporada 1)
+                .thenByDescending { maybe ->
+                    val mediaSeason = SeasonFilterHelper.extractSeasonNumber(maybe.original.originalTitle)
+                    val targetSeason = SeasonFilterHelper.detectTargetSeason(context)
+                    when {
+                        mediaSeason == targetSeason -> 3
+                        targetSeason == 1 && mediaSeason == null -> 2
+                        else -> 0
+                    }
+                }
+                // 2. Prioridad de subtítulos en español / latino explícito
+                .thenByDescending { maybe ->
+                    val original = maybe.original
+                    val title = original.originalTitle
+                    val isExplicitSpanish = original.properties.subtitleLanguageIds.any { it.equals("SPA", ignoreCase = true) } ||
+                        title.contains("latino", ignoreCase = true) ||
+                        title.contains("español", ignoreCase = true) ||
+                        title.contains("espanol", ignoreCase = true) ||
+                        title.contains("castellano", ignoreCase = true)
+                    if (isExplicitSpanish) 2 else 1
+                }
+                // 3. Exact title match over fuzzy/movies/spin-offs
                 .thenByDescending { maybe ->
                     when (maybe) {
                         is MaybeExcludedMedia.Included -> if (maybe.metadata.subjectMatchKind == MatchMetadata.SubjectMatchKind.EXACT) 1 else 0
                         is MaybeExcludedMedia.Excluded -> 0
                     }
                 }
-                // 2. Similarity (Exact match beats movies/spin-offs)
+                // 4. Similarity (Exact match beats movies/spin-offs)
                 .thenByDescending { maybe ->
                     when (maybe) {
                         is MaybeExcludedMedia.Excluded -> 0
                         is MaybeExcludedMedia.Included -> maybe.similarity
                     }
                 }
-                // 3. Penalize movies/compilations when watching TV series episodes
+                // 5. Penalize movies/compilations when watching TV series episodes
                 .thenBy { maybe ->
                     val title = maybe.original.originalTitle
                     val isMovie = title.contains("Movie", ignoreCase = true) ||
@@ -355,7 +397,7 @@ class MediaSelectorFilterSortAlgorithm {
                             title.contains("劇場版", ignoreCase = true)
                     if (isMovie) 1 else 0
                 }
-                // 4. Prefer AVC / standard H.264 formats over HEVC / AV1 for hardware compatibility
+                // 6. Prefer AVC / standard H.264 formats over HEVC / AV1 for hardware compatibility
                 .thenBy { maybe ->
                     val title = maybe.original.originalTitle
                     if (title.contains("HEVC", ignoreCase = true) ||
@@ -368,7 +410,7 @@ class MediaSelectorFilterSortAlgorithm {
                         0
                     }
                 }
-                // 5. Prioritize torrents with more seeders
+                // 7. Prioritize torrents with more seeders
                 .thenByDescending { maybe ->
                     maybe.original.properties.seeders ?: -1
                 }
@@ -417,6 +459,87 @@ class MediaSelectorFilterSortAlgorithm {
         return mediaList.filter {
             @OptIn(UnsafeOriginalMediaAccess::class)
             filterCandidate(it.original)
+        }
+    }
+
+    companion object {
+        private val SPANISH_OR_MULTI_REGEX = Regex(
+            """(?i)(?:español|espanol|spanish|castellano|latino|castilian|multi-?sub|multisubs?|multiple\s+subtitles?|multi-?audio|multi-?dub|\[multi\]|\bmulti\b|\b(?:SPA|ESP|LAT|ES)\b|\[(?:SPA|ESP|LAT|ES|ESP-LAT|SPA-LAT)\]|subsplease|erai-raws|judas|asw|tsundere-raws)""",
+            RegexOption.IGNORE_CASE,
+        )
+
+        fun isSpanishOrMultiSub(media: Media): Boolean {
+            if (media.properties.subtitleLanguageIds.any { it.equals("SPA", ignoreCase = true) }) {
+                return true
+            }
+            if (media.extraFiles.subtitles.any { sub ->
+                    sub.language?.startsWith("es", ignoreCase = true) == true ||
+                    sub.label?.contains("espanol", ignoreCase = true) == true ||
+                    sub.label?.contains("español", ignoreCase = true) == true ||
+                    sub.label?.contains("latino", ignoreCase = true) == true
+                }) {
+                return true
+            }
+
+            val title = media.originalTitle
+            val subject = media.properties.subjectName.orEmpty()
+            val text = "$title $subject"
+
+            return SPANISH_OR_MULTI_REGEX.containsMatchIn(text)
+        }
+    }
+
+    object SeasonFilterHelper {
+        private val SEASON_REGEXES = listOf(
+            Regex("""(?i)\b(?:Season|S)\s*0?(\d+)\b"""),
+            Regex("""(?i)\b(\d+)(?:st|nd|rd|th)\s*(?:Season|Cour)\b"""),
+            Regex("""(?i)\b(?:Part|Cour)\s*0?(\d+)\b"""),
+            Regex("""第\s*([0-9]+)\s*[季期部]"""),
+            Regex("""第\s*([一二三四五六七八九十]+)\s*[季期部]"""),
+        )
+        private val CHINESE_NUMS = mapOf(
+            '一' to 1, '二' to 2, '三' to 3, '四' to 4, '五' to 5,
+            '六' to 6, '七' to 7, '八' to 8, '九' to 9, '十' to 10,
+        )
+        private val ROMAN_NUMS = mapOf(
+            "VI" to 6, "IV" to 4, "V" to 5, "III" to 3, "II" to 2, "I" to 1,
+        )
+
+        // Arcos de secuelas populares que no siempre incluyen número de temporada en el título
+        private val SEASON_2_OR_LATER_ARCS = listOf(
+            "Kaigyoku", "Gyokusetsu", "懐玉", "玉折", "Shibuya", "渋谷事変", "Entertainment District", "Yuukaku",
+            "Swordsmith Village", "Katanakaji", "Hashira Training", "Mugen Train", "Infinte Train",
+        )
+
+        fun extractSeasonNumber(text: String): Int? {
+            for (regex in SEASON_REGEXES) {
+                val match = regex.find(text) ?: continue
+                val g = match.groupValues[1]
+                g.toIntOrNull()?.let { return it }
+                val chSum = g.mapNotNull { CHINESE_NUMS[it] }.sum()
+                if (chSum > 0) return chSum
+            }
+            val romanRegex = Regex("""(?i)\b(VI|IV|V|III|II|I)\b""")
+            romanRegex.find(text)?.let { match ->
+                ROMAN_NUMS[match.groupValues[1].uppercase()]?.let { return it }
+            }
+            if (SEASON_2_OR_LATER_ARCS.any { text.contains(it, ignoreCase = true) }) {
+                return 2
+            }
+            return null
+        }
+
+        fun detectTargetSeason(context: MediaSelectorContext): Int {
+            val seriesSort = context.subjectSeriesInfo?.seasonSort
+            if (seriesSort != null && seriesSort > 1) {
+                return seriesSort
+            }
+            val names = context.subjectInfo?.allNames.orEmpty()
+            for (name in names) {
+                val s = extractSeasonNumber(name)
+                if (s != null && s > 1) return s
+            }
+            return 1
         }
     }
 }

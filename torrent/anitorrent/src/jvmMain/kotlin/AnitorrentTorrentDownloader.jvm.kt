@@ -44,17 +44,21 @@ internal fun TorrentDownloaderConfig.toSessionSettings(): session_settings_t {
         download_rate_limit = config.downloadRateLimitBytes
         upload_rate_limit = config.uploadRateLimitBytes
         share_ratio_limit = config.shareRatioLimit
-        connections_limit = 200
+        connections_limit = 500
+        active_downloads = 50
+        active_seeds = 50
+        max_peerlist_size = 500
         listOf(
             "router.utorrent.com:6881",
             "router.bittorrent.com:6881",
             "dht.transmissionbt.com:6881",
             "router.bitcomet.com:6881",
+            "dht.libtorrent.org:25401",
+            "dht.aelitis.com:6881",
         ).forEach {
             dht_bootstrap_nodes_extra_add(it)
         }
     }
-
 }
 
 internal actual fun createAnitorrentTorrentDownloader(

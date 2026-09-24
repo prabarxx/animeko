@@ -394,6 +394,11 @@ http://nyaa.tracker.wf:7777/announce
 udp://open.stealth.si:80/announce
 udp://exodus.desync.com:6969/announce
 udp://tracker.torrent.eu.org:451/announce
+udp://explodie.org:6969/announce
+udp://tracker.moeking.me:6969/announce
+udp://open.demonii.com:1337/announce
+udp://tracker.dler.org:6969/announce
+udp://tracker.tamersunion.org:443/announce
 http://1337.abcvg.info:80/announce
 http://bt1.archive.org:6969/announce
 http://bt2.archive.org:6969/announce

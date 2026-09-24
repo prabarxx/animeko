@@ -171,12 +171,18 @@ class RssMediaSource(
             val ep1 = query.episodeSort.toString().trim()
             if (ep1.isNotBlank()) add(ep1)
             query.episodeSort.number?.toInt()?.let { num ->
-                if (num > 0) add(num.toString())
+                if (num > 0) {
+                    add(num.toString())
+                    if (num < 10) add("0$num")
+                }
             }
             val ep2 = query.episodeEp?.toString()?.trim()
             if (!ep2.isNullOrBlank()) add(ep2)
             query.episodeEp?.number?.toInt()?.let { num ->
-                if (num > 0) add(num.toString())
+                if (num > 0) {
+                    add(num.toString())
+                    if (num < 10) add("0$num")
+                }
             }
         }
 

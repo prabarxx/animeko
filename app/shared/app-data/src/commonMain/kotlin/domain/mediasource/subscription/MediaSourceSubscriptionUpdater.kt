@@ -52,6 +52,10 @@ class MediaSourceSubscriptionUpdater(
         val currentTimeMillis = currentTimeMillis()
 
         for (subscription in subscriptions) {
+            if (MediaSourceSubscriptionRepository.isInvalidSubscriptionUrl(subscription.url)) {
+                continue
+            }
+
             fun shouldUpdate(): Boolean {
                 if (force) return true
                 if (subscription.lastUpdated == null) return true

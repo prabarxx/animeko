@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Nombre del tag o versión de release (ej. v6.2.2-es)'
+        description: 'Nombre del tag o versión de release (ej. v6.2.7)'
         required: false
-        default: 'v6.2.8-es'
+        default: 'v6.2.7'
 
 permissions:
   contents: write
@@ -88,7 +88,7 @@ jobs:
           mkdir -p output_apks
           APK_ARM64=$(find app/android/build/outputs/apk/default/release -name "*arm64-v8a-release.apk" | head -n 1)
           if [ -n "$APK_ARM64" ] && [ -f "$APK_ARM64" ]; then
-            cp "$APK_ARM64" output_apks/animeko-v6.2.6-redmi-note-13-arm64-v8a.apk
+            cp "$APK_ARM64" output_apks/animeko-v6.2.7-redmi-note-13-arm64-v8a.apk
             cp "$APK_ARM64" output_apks/animeko-redmi-note-13-arm64-v8a.apk
           fi
           
@@ -115,27 +115,39 @@ jobs:
           elif [ -n "${{ inputs.tag_name }}" ]; then
             echo "val=${{ inputs.tag_name }}" >> "$GITHUB_OUTPUT"
           else
-            echo "val=v6.2.6-es" >> "$GITHUB_OUTPUT"
+            echo "val=v6.2.7" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.val }}
-          name: Animeko v6.2.6 para Redmi Note 13 (${{ steps.tag.outputs.val }})
+          name: Animeko v6.2.7 para Redmi Note 13 (${{ steps.tag.outputs.val }})
           body: |
-            ## Animeko v6.2.6 (Redmi Note 13 / arm64-v8a)
+            ## Animeko v6.2.7 (Redmi Note 13 / arm64-v8a)
             
-            Corrección de subtítulos ASS estirados en pantalla completa (modo horizontal) y optimizaciones de reproducción en Android.
+            Versión v6.2.7 con optimizaciones críticas en streaming de torrents, filtro estricto de subtítulos en español y multilenguaje latino, corrección de búsqueda de temporadas y purga de fuentes obsoletas.
             
             ### Archivos incluidos:
-            - **`animeko-v6.2.6-redmi-note-13-arm64-v8a.apk`**: APK optimizado nativo para Redmi Note 13 (arm64-v8a).
-            - **`animeko-redmi-note-13-arm64-v8a.apk`**: Enlace estándar para compatibilidad.
-            - **`animeko-universal-release.apk`**: APK universal.
+            - **`animeko-v6.2.7-redmi-note-13-arm64-v8a.apk`**: APK optimizado nativo para Redmi Note 13 (arm64-v8a).
+            - **`animeko-redmi-note-13-arm64-v8a.apk`**: Enlace estándar para compatibilidad directa.
+            - **`animeko-universal-release.apk`**: APK universal compatible con todas las arquitecturas.
             
-            ### Novedades y correcciones (v6.2.6):
-            - **Corrección de subtítulos ASS estirados en pantalla completa**: Se solucionó la deformación horizontal de subtítulos ASS/SSA al rotar a pantalla completa (paisaje) en pantallas panorámicas (20:9). Se sincronizó explícitamente la relación de aspecto del video con el contenedor `AspectRatioFrameLayout` de ExoPlayer (`contentFrame`), resolviendo el bug upstream de Media3 (`androidx/media#2284`) donde los efectos de video impedían que la vista se ajustara a 16:9 con bandas negras (letterbox). Con esto, la textura de subtítulos se renderiza en la relación exacta 16:9 del video con escala 1:1 sin distorsión.
-            - **Todas las soluciones de reproducción de torrents v6.2.5**: Streaming de torrents sin congelamiento, deadlines corregidos en libtorrent, sincronización de memoria compartida IPC y selección automática de subtítulos en español latino.
+            ### Novedades y correcciones (v6.2.7):
+            1. **Carga y Reproducción Acelerada de Torrents**:
+               - Aumento de la ventana de buffer a 32MB (12 a 64 piezas) y cabecera inicial a 4MB / cola a 2MB para saturar rápidamente el ancho de banda con múltiples sembradores.
+               - Asignación de urgencia inmediata (`deadline = 0`) para la pieza solicitada y de salto (seek), eliminando el tiempo de espera al iniciar o avanzar la reproducción.
+               - Límite de conexiones ampliado a 500 y peers a 500 en libtorrent.
+               - Inclusión de nodos DHT bootstrap adicionales y trackers públicos de alto rendimiento.
+            2. **Filtro Potente de Subtítulos en Español y Multilenguaje (Latino)**:
+               - Se muestran únicamente enlaces torrent que contienen subtítulos en español (SPA, ESP, LAT, Español, Latino, Castellano) o versiones Multilenguaje con pista en español latino de fansubs reconocidos (SubsPlease, Erai-raws, Judas, ASW, Tsundere-Raws).
+               - Priorización de subtítulos en español y español latino al inicio de la lista de fuentes.
+            3. **Corrección de Búsqueda y Filtro de Temporadas (Temporada 1)**:
+               - Solución al error donde buscar el episodio 1 de animes como Jujutsu Kaisen mostraba el episodio 1 de temporadas posteriores.
+               - Normalización con relleno de ceros (`01`, `02`...) en consultas RSS para emparejar lanzamientos individuales con precisión.
+               - Algoritmo estricto de filtrado y ordenamiento por temporada que descarta episodios etiquetados con temporadas que no coinciden con la seleccionada.
+            4. **Eliminación y Bloqueo de Fuentes JSON**:
+               - Se eliminaron y bloquearon las fuentes de suscripción que terminan en `.json` (como `sub.creamycake.org` / `soupcreamycake.org`) de la administración de fuentes y del almacenamiento de la app.
           draft: false
           prerelease: false
           files: |

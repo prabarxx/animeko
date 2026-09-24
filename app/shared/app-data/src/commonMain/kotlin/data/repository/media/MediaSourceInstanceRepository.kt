@@ -201,7 +201,15 @@ data class MediaSourceSaves(
 class MediaSourceInstanceRepositoryImpl(
     private val dataStore: DataStore<MediaSourceSaves>
 ) : MediaSourceInstanceRepository() {
-    override val flow: Flow<List<MediaSourceSave>> = dataStore.data.map { it.instances }
+    private fun isInvalidSave(save: MediaSourceSave): Boolean {
+        val serialized = save.config.serializedArguments?.toString() ?: ""
+        return (serialized.contains(".json", ignoreCase = true) && serialized.contains("http", ignoreCase = true)) ||
+                serialized.contains("creamycake.org", ignoreCase = true)
+    }
+
+    override val flow: Flow<List<MediaSourceSave>> = dataStore.data.map { saves ->
+        saves.instances.filterNot { isInvalidSave(it) }
+    }
     override suspend fun clear() {
         dataStore.updateData { MediaSourceSaves.Empty }
     }
@@ -220,11 +228,12 @@ class MediaSourceInstanceRepositoryImpl(
     }
 
     override suspend fun add(mediaSourceSave: MediaSourceSave) {
+        if (isInvalidSave(mediaSourceSave)) return
         dataStore.updateData { current ->
             if (current.instances.any { it.instanceId == mediaSourceSave.instanceId }) {
                 error("Attempting to add a duplicated MediaSourceSave: $mediaSourceSave")
             }
-            current.copy(instances = current.instances + mediaSourceSave)
+            current.copy(instances = current.instances.filterNot { isInvalidSave(it) } + mediaSourceSave)
         }
     }
 

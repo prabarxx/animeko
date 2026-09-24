@@ -89,12 +89,16 @@ sealed class SubtitleLanguage(
     }
 
     object Spanish : SubtitleLanguage("SPA", "Español") {
+        private val wordRegex = Regex("""(?i)(?:^|[^a-zA-Z0-9])(?:SPA|ESP|LAT|ES|ESP-LAT|SPA-LAT)(?:$|[^a-zA-Z0-9])""")
         private val tokens = arrayOf(
-            "Español", "Espanol", "Spanish", "SPA", "Castellano", "Latino",
-            "Multi-Sub", "Multi-Subs", "Multisubs", "Multiple Subtitle",
+            "Español", "Espanol", "Spanish", "SPA", "Castellano", "Latino", "Castilian",
+            "Multi-Sub", "Multi-Subs", "Multisubs", "MultiSub", "MultiSubs",
+            "Multiple Subtitle", "Multiple Subtitles",
+            "Multi-Audio", "Multi-Dub", "MULTi", "Multi",
+            "SubsPlease", "Erai-raws", "Judas", "ASW", "Tsundere-Raws",
         )
         override fun matches(text: String): Boolean {
-            return tokens.any { text.contains(it, ignoreCase = true) }
+            return tokens.any { text.contains(it, ignoreCase = true) } || wordRegex.containsMatchIn(text)
         }
     }
 

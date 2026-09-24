@@ -93,11 +93,28 @@ abstract class RssMediaSourceEngine {
     ): Result
 
     protected companion object {
+        private val TITLE_CLEAN_PREFIX = Regex("""^[\[【][^\]】]+[\]】]\s*""")
+        private val TITLE_SPLIT_EPISODE = Regex("""\s+-\s+(?:\d+|SP|\d+\s*~|\d+\.\d+)""")
+        private val TITLE_CLEAN_BRACKETS = Regex("""[\(\[\{【].*$""")
+
+        private fun extractSubjectNameFromTitle(title: String): String? {
+            val withoutAlliance = title.replace(TITLE_CLEAN_PREFIX, "")
+            val parts = withoutAlliance.split(TITLE_SPLIT_EPISODE, limit = 2)
+            if (parts.size > 1 && parts[0].isNotBlank()) {
+                return parts[0].trim()
+            }
+            val cleaned = withoutAlliance.replace(TITLE_CLEAN_BRACKETS, "").trim()
+            return cleaned.ifBlank { null }
+        }
+
         fun convertItemToMedia(
             item: RssItem,
             mediaSourceId: String,
         ): Media? {
             val details = RawTitleParser.getDefault().parse(item.title, null)
+            val subject = details.chineseTitle
+                ?: details.otherTitles.firstOrNull()
+                ?: extractSubjectNameFromTitle(item.title)
 
             return DefaultMedia(
                 mediaId = "$mediaSourceId.${item.guid}",
@@ -108,7 +125,7 @@ abstract class RssMediaSourceEngine {
                 publishedTime = item.pubDate?.toInstant(TimeZone.currentSystemDefault())
                     ?.toEpochMilliseconds() ?: 0,
                 properties = MediaProperties(
-                    subjectName = details.chineseTitle ?: details.otherTitles.firstOrNull(),
+                    subjectName = subject,
                     episodeName = null,
                     subtitleLanguageIds = details.subtitleLanguages.map { it.id },
                     resolution = details.resolution?.toString() ?: Resolution.R1080P.toString(),

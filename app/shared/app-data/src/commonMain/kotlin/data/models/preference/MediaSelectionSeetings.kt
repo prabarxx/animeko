@@ -34,7 +34,7 @@ constructor(
     /**
      * 完结后隐藏单集资源
      */
-    val hideSingleEpisodeForCompleted: Boolean = true,
+    val hideSingleEpisodeForCompleted: Boolean = false,
     /**
      * 优先选择季度全集资源
      */

@@ -111,12 +111,16 @@ class MediaSelectorFilterSortAlgorithm {
             && context.subjectFinished == true // 还未加载到剧集信息时, 先显示
             && media.kind == MediaSourceKind.BitTorrent
         ) {
-            // 完结番隐藏单集资源
-            val range = media.episodeRange
-                ?: return exclude(MediaExclusionReason.SingleEpisodeForCompleteSubject(episodeRange = null))
-            if (range.isSingleEpisode()) return exclude(
-                MediaExclusionReason.SingleEpisodeForCompleteSubject(episodeRange = range),
-            )
+            // 完结番隐藏单集资源，但如果是当前正在观看的这一集（例如第2集），则绝不排除
+            val currentSort = context.episodeInfo?.sort
+            val isCurrentEpisode = currentSort != null && media.episodeRange?.contains(currentSort) == true
+            if (!isCurrentEpisode) {
+                val range = media.episodeRange
+                    ?: return exclude(MediaExclusionReason.SingleEpisodeForCompleteSubject(episodeRange = null))
+                if (range.isSingleEpisode()) return exclude(
+                    MediaExclusionReason.SingleEpisodeForCompleteSubject(episodeRange = range),
+                )
+            }
         }
 
         if (!preference.showWithoutSubtitle &&

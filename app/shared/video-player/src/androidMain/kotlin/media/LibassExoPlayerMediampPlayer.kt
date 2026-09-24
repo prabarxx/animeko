@@ -124,6 +124,20 @@ class LibassExoPlayerMediampPlayer private constructor(
                 }
             }
         }
+        runCatching {
+            exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
+                .buildUpon()
+                .setPreferredTextLanguages("es-419", "spa", "es")
+                .setPreferredTextLabels(
+                    "Español (Latinoamérica)",
+                    "Spanish (Latin America)",
+                    "Español (Latino)",
+                    "Latino",
+                    "Español",
+                    "Spanish",
+                )
+                .build()
+        }
         backgroundScope.launch(Dispatchers.Main.immediate) {
             while (isActive) {
                 // AssRenderer normally supplies this timestamp. MediaMP owns the ExoPlayer

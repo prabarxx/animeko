@@ -319,7 +319,31 @@ class MediaSelectorFilterSortAlgorithm {
                     tiers?.get(maybe.original.mediaSourceId, maybe.original.properties.alliance)
                         ?: MediaSourceTier.MaximumValue // 还没加载出来, 先不排序
                 }
-                // Prefer AVC / standard H.264 formats over HEVC / AV1 for hardware compatibility
+                // 1. Exact title match over fuzzy/movies/spin-offs
+                .thenByDescending { maybe ->
+                    when (maybe) {
+                        is MaybeExcludedMedia.Included -> if (maybe.metadata.subjectMatchKind == MatchMetadata.SubjectMatchKind.EXACT) 1 else 0
+                        is MaybeExcludedMedia.Excluded -> 0
+                    }
+                }
+                // 2. Similarity (Exact match beats movies/spin-offs)
+                .thenByDescending { maybe ->
+                    when (maybe) {
+                        is MaybeExcludedMedia.Excluded -> 0
+                        is MaybeExcludedMedia.Included -> maybe.similarity
+                    }
+                }
+                // 3. Penalize movies/compilations when watching TV series episodes
+                .thenBy { maybe ->
+                    val title = maybe.original.originalTitle
+                    val isMovie = title.contains("Movie", ignoreCase = true) ||
+                            title.contains("Gekijouban", ignoreCase = true) ||
+                            title.contains("Zenpen", ignoreCase = true) ||
+                            title.contains("Koupen", ignoreCase = true) ||
+                            title.contains("劇場版", ignoreCase = true)
+                    if (isMovie) 1 else 0
+                }
+                // 4. Prefer AVC / standard H.264 formats over HEVC / AV1 for hardware compatibility
                 .thenBy { maybe ->
                     val title = maybe.original.originalTitle
                     if (title.contains("HEVC", ignoreCase = true) ||
@@ -334,13 +358,6 @@ class MediaSelectorFilterSortAlgorithm {
                 }
                 .thenByDescending {
                     it.original.publishedTime
-                }
-                .thenByDescending {
-                    // 相似度越高, 排序越前
-                    when (it) {
-                        is MaybeExcludedMedia.Excluded -> 0
-                        is MaybeExcludedMedia.Included -> it.similarity
-                    }
                 },
         )
     }

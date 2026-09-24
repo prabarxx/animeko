@@ -124,12 +124,6 @@ class LibassExoPlayerMediampPlayer private constructor(
                 }
             }
         }
-        runCatching {
-            val params = exoPlayer.trackSelectionParameters.buildUpon()
-                .setExceedRendererCapabilitiesIfNecessary(true)
-                .build()
-            exoPlayer.trackSelectionParameters = params
-        }
         backgroundScope.launch(Dispatchers.Main.immediate) {
             while (isActive) {
                 // AssRenderer normally supplies this timestamp. MediaMP owns the ExoPlayer

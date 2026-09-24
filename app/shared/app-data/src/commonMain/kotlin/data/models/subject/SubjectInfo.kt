@@ -97,6 +97,16 @@ data class SubjectInfo(
         }
 
     /**
+     * Sinopsis localizada (preferentemente en español)
+     */
+    val displaySummary: String
+        get() {
+            return me.him188.ani.app.domain.subject.SubjectSynopsisResolver.getCachedSynopsis(subjectId)
+                ?: me.him188.ani.app.domain.subject.SubjectSynopsisResolver.getCachedSynopsis(summary)
+                ?: summary
+        }
+
+    /**
      * 主日文/罗马音名, 以及所有别名, 主中文名
      */
     val allNames by lazy(LazyThreadSafetyMode.PUBLICATION) {

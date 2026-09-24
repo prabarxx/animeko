@@ -53,6 +53,8 @@ import me.him188.ani.app.ui.lang.subject_details_show_less
 import me.him188.ani.app.ui.lang.subject_details_show_more
 import me.him188.ani.app.ui.lang.subject_details_total_episodes
 import me.him188.ani.datasources.api.PackedDate
+import androidx.compose.runtime.LaunchedEffect
+import me.him188.ani.app.domain.subject.SubjectSynopsisResolver
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -152,10 +154,23 @@ fun SubjectSummarySection(
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     var hasOverflow by remember { mutableStateOf(false) }
+    var localizedSummary by remember(summary) {
+        mutableStateOf(SubjectSynopsisResolver.getCachedSynopsis(summary) ?: summary)
+    }
+
+    LaunchedEffect(summary) {
+        if (SubjectSynopsisResolver.hasCJK(summary)) {
+            val resolved = SubjectSynopsisResolver.resolveSynopsis(summary)
+            if (!resolved.isNullOrBlank()) {
+                localizedSummary = resolved
+            }
+        }
+    }
+
     Column(modifier.fillMaxWidth()) {
         SelectionContainer {
             Text(
-                summary,
+                localizedSummary,
                 Modifier.fillMaxWidth().clickable { expanded = !expanded },
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = if (expanded) Int.MAX_VALUE else collapsedMaxLines,

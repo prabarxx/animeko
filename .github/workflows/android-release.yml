@@ -148,6 +148,10 @@ jobs:
                - Algoritmo estricto de filtrado y ordenamiento por temporada que descarta episodios etiquetados con temporadas que no coinciden con la seleccionada.
             4. **Eliminación y Bloqueo de Fuentes JSON**:
                - Se eliminaron y bloquearon las fuentes de suscripción que terminan en `.json` (como `sub.creamycake.org` / `soupcreamycake.org`) de la administración de fuentes y del almacenamiento de la app.
+            5. **Integración con AniList y Sinopsis en Español**:
+               - Tendencias y recomendaciones de la página principal directamente desde la API GraphQL de AniList con carátulas verticales en Ultra HD y títulos legibles occidentales.
+               - Mapeo automático de anime entre AniList y el catálogo de reproducción de torrents.
+               - Resolutor y traductor asíncrono de sinopsis al español (`SubjectSynopsisResolver`) con almacenamiento en caché local.
           draft: false
           prerelease: false
           files: |

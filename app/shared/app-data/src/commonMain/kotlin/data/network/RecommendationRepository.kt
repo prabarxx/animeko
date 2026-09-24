@@ -28,8 +28,12 @@ import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.logging.error
 import kotlin.coroutines.CoroutineContext
 
+import io.ktor.client.HttpClient
+import me.him188.ani.utils.ktor.createDefaultHttpClient
+
 class RecommendationRepository(
     private val homeApi: ApiInvoker<HomeAniApi>,
+    private val httpClient: HttpClient = createDefaultHttpClient(),
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_
 ) : Repository() {
     fun recommendedSubjectsPager(): Flow<PagingData<RecommendedItemInfo>> {
@@ -45,20 +49,33 @@ class RecommendationRepository(
             val offset = params.key ?: 0
             val loadSize = params.loadSize
             return runWrappingExceptionAsLoadResult {
-                val response = withContext(ioDispatcher) {
-                    homeApi {
-                        getHomeRecommendations(
-                            offset = offset,
-                            limit = loadSize,
-                        ).body()
-                    }
+                val page = (offset / loadSize.coerceAtLeast(1)) + 1
+                val aniListItems = withContext(ioDispatcher) {
+                    me.him188.ani.app.domain.metadata.AniListService.fetchPopular(
+                        page = page,
+                        perPage = loadSize,
+                        httpClient = httpClient,
+                    )
                 }
-                val list: List<RecommendedItemInfo> = response.items.mapNotNull { it.toRecommendedSubjectInfo() }
+
+                val list: List<RecommendedItemInfo> = if (!aniListItems.isNullOrEmpty()) {
+                    aniListItems
+                } else {
+                    val response = withContext(ioDispatcher) {
+                        homeApi {
+                            getHomeRecommendations(
+                                offset = offset,
+                                limit = loadSize,
+                            ).body()
+                        }
+                    }
+                    response.items.mapNotNull { it.toRecommendedSubjectInfo() }
+                }
 
                 LoadResult.Page(
                     list,
                     prevKey = if (offset == 0) null else (offset - loadSize).coerceAtLeast(0),
-                    nextKey = if (offset + list.size >= response.total) null else offset + loadSize,
+                    nextKey = if (list.isEmpty()) null else offset + loadSize,
                 )
             }.also {
                 if (it is LoadResult.Error) {

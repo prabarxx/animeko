@@ -51,21 +51,25 @@ class TrendsRepository(
 ) : Repository() {
     suspend fun getTrendsInfo(): TrendsInfo {
         return withContext(ioDispatcher) {
-            fetchBangumiNextTrends() ?: trendsApi {
-                getTrends().body().toTrendsInfo()
-            }
+            me.him188.ani.app.domain.metadata.AniListService.fetchTrending(httpClient)
+                ?: fetchBangumiNextTrends()
+                ?: trendsApi {
+                    getTrends().body().toTrendsInfo()
+                }
         }
     }
 
-    // From animeko server or bangumi
+    // From AniList, Bangumi Next or Animeko server
     fun trendsInfoPager(): Flow<PagingData<TrendsInfo>> {
         return Pager(defaultPagingConfig) {
             SinglePagePagingSource<Unit, TrendsInfo> {
                 runWrappingExceptionAsLoadResult<Unit, TrendsInfo> {
                     val trendsInfo = withContext(ioDispatcher) {
-                        fetchBangumiNextTrends() ?: trendsApi {
-                            getTrends().body().toTrendsInfo()
-                        }
+                        me.him188.ani.app.domain.metadata.AniListService.fetchTrending(httpClient)
+                            ?: fetchBangumiNextTrends()
+                            ?: trendsApi {
+                                getTrends().body().toTrendsInfo()
+                            }
                     }
                     PagingSource.LoadResult.Page(
                         listOf(trendsInfo),
